@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node name="user_performance" pkg="robotrainer_user_performance" type="user_performance.py">
+    <remap from="mobile_robot_pose" to="/mobile_robot_pose" />
+    <remap from="input_force" to="/fts/force_filtered" />
+    <remap from="disturbance_force" to="/heika/disturbance_force" />
+    <remap from="robot_command" to="/base_controller/command_safe" />
+    <remap from="checkpoint" to="/heika_path_deviation/checkpoint_topic" />
+    <remap from="path_update" to="/heika_path/update" />                          <!-- Warum? -->
+    <remap from="odometry" to="/base_controller/odometry" />
+    <remap from="checkpoint_info" to="/heika_path_deviation/checkpoint_info_topic" />
+    <remap from="legs_people" to="/leg_detection/people" />
+
+    <param name="rate" value="500.0" type="double" />
+    <param name="root_frame" value="map" />
+    <param name="child_frame" value="base_link" />
+  </node>
+
+</launch>
