@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-
+  <arg name="course" />
   <node name="user_performance" pkg="robotrainer_user_performance" type="user_performance.py">
     <remap from="mobile_robot_pose" to="/mobile_robot_pose" />
     <remap from="input_force" to="/fts/force_filtered" />
@@ -15,6 +15,10 @@
     <param name="rate" value="500.0" type="double" />
     <param name="root_frame" value="map" />
     <param name="child_frame" value="base_link" />
+    
+    
+    <param name="path_type" value="$(arg course)" />
+    
   </node>
 
 </launch>
