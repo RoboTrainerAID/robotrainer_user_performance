@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>robotrainer_heika_classification</name>
+  <version>0.0.1</version>
+  <description>Packge with user perfomance classificaiton based on HEiKA data.</description>
+
+  <maintainer email="denis.stogl@kit.edu">Denis Štogl</maintainer>
+
+
+  <!-- One license tag required, multiple allowed, one license per tag -->
+  <!-- Commonly used license strings: -->
+  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
+  <license>IPR-Licence</license>
+
+
+  <!-- Url tags are optional, but multiple are allowed, one per tag -->
+  <!-- Optional attribute type can be: website, bugtracker, or repository -->
+  <!-- Example: -->
+  <!-- <url type="website">http://wiki.ros.org/robotrainer_user_performance</url> -->
+
+
+  <!-- Author tags are optional, multiple are allowed, one per tag -->
+  <!-- Authors do not have to be maintainers, but could be -->
+  <!-- Example: -->
+  <author email="xingbo.wang@student.kit.edu">Xingbo Wang</author>
+  <author email="denis.stogl@kit.edu">Denis Štogl</author>
+
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>geometry_msgs</depend>
+  <depend>ipr_helpers</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>visualization_msgs</depend>
+
+</package>

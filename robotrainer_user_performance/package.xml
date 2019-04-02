@@ -22,21 +22,17 @@
   <!-- Author tags are optional, multiple are allowed, one per tag -->
   <!-- Authors do not have to be maintainers, but could be -->
   <!-- Example: -->
-  <author email="xingbo.wang@student.kit.edu">Xingbo Wang</author>
   <author email="denis.stogl@kit.edu">Denis Štogl</author>
 
 
   <buildtool_depend>catkin</buildtool_depend>
-  <depend>geometry_msgs</depend>
-  <depend>ipr_helpers</depend>
-  <depend>nav_msgs</depend>
-  <depend>std_msgs</depend>
-  <depend>visualization_msgs</depend>
+  <depend>robotrainer_user_perfomance_parameters_calculation</depend>
+  <exec_depend>robotrainer_heika_classification</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
-
+    <metapackage/>
   </export>
 </package>

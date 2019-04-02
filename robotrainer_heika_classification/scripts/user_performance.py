@@ -45,7 +45,7 @@ def callback_legs_people(data):
     pass
 
 def user_performance():
-    rospy.init_node('robotrainer_user_perfomance')
+    rospy.init_node('robotrainer_heika_classification_based_user_performance')
 
     rospy.Subscriber("mobile_robot_pose", Pose2DStamped, callback_mobile_robot_pose)
     rospy.Subscriber("input_force", WrenchStamped, callback_input_force)

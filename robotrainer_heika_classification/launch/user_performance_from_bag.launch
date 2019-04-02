@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-  <node name="user_performance" pkg="robotrainer_user_performance" type="user_performance.py">
+  <node name="user_performance" pkg="robotrainer_heika_classification" type="user_performance.py">
     <remap from="mobile_robot_pose" to="/mobile_robot_pose" />
     <remap from="input_force" to="/fts/force_filtered" />
     <remap from="disturbance_force" to="/heika/disturbance_force" />
