@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>robotrainer_user_performance</name>
+  <name>robotrainer_deviation</name>
   <version>0.0.1</version>
-  <description>Package for calcuation of users' performance when using RoboTrainer.</description>
+  <description>Packge for calculation of deviation from path for robotrainer.</description>
 
   <maintainer email="denis.stogl@kit.edu">Denis Štogl</maintainer>
 
@@ -22,17 +22,18 @@
   <!-- Author tags are optional, multiple are allowed, one per tag -->
   <!-- Authors do not have to be maintainers, but could be -->
   <!-- Example: -->
+  <author email="xingbo.wang@student.kit.edu">Xingbo Wang</author>
   <author email="denis.stogl@kit.edu">Denis Štogl</author>
 
 
   <buildtool_depend>catkin</buildtool_depend>
-  <exec_depend>robotrainer_deviation</exec_depend>
-  <exec_depend>robotrainer_heika_classification</exec_depend>
+  <depend>geometry_msgs</depend>
+  <depend>message_generation</depend>
+  <depend>robotrainer_parameters</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>visualization_msgs</depend>
 
-
-  <!-- The export tag contains other, unspecified, tags -->
-  <export>
-    <!-- Other tools can request additional information be placed here -->
-    <metapackage/>
-  </export>
 </package>

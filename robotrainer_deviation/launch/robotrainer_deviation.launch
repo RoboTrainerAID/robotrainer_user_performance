@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node name="robotrainer_deviation" pkg="robotrainer_deviation" type="robotrainer_deviation_node">
+    <param name="update_rate" value="100.0" type="double" />
+    <param name="marker_front_link" value="robotrainer_front_marker" />
+    <param name="marker_left_link" value="robotrainer_left_marker" />
+    <param name="marker_right_link" value="robotrainer_right_marker" />
+  </node>
+
+</launch>
