@@ -62,25 +62,25 @@ void RobotrainerPathDeviation::update(const ros::TimerEvent &event)
     deviation.front = calculateMarkerDeviation(marker_front_link_, current_path_index_front_, visu_marker_front);
     visu_markers.markers.push_back(visu_marker_front);
     
-//     // Calculate left
-//     visualization_msgs::Marker visu_marker_left;
-//     visu_marker_left.id = 2;
-//     visu_marker_left.color.a = 1.0;
-//     visu_marker_left.color.r = 0.0;
-//     visu_marker_left.color.g = 0.0;
-//     visu_marker_left.color.b = 1.0;
-//     deviation.left = calculateMarkerDeviation(marker_left_link_, current_path_index_left_, visu_marker_left);
-//     visu_markers.markers.push_back(visu_marker_left);
-// 
-//     // Calculate right
-//     visualization_msgs::Marker visu_marker_right;
-//     visu_marker_right.id = 3;
-//     visu_marker_right.color.a = 1.0;
-//     visu_marker_right.color.r = 1.0;
-//     visu_marker_right.color.g = 0.0;
-//     visu_marker_right.color.b = 0.0;
-//     deviation.right = calculateMarkerDeviation(marker_right_link_, current_path_index_right_, visu_marker_right);
-//     visu_markers.markers.push_back(visu_marker_right);
+    // Calculate left
+    visualization_msgs::Marker visu_marker_left;
+    visu_marker_left.id = 2;
+    visu_marker_left.color.a = 1.0;
+    visu_marker_left.color.r = 0.0;
+    visu_marker_left.color.g = 0.0;
+    visu_marker_left.color.b = 1.0;
+    deviation.left = calculateMarkerDeviation(marker_left_link_, current_path_index_left_, visu_marker_left);
+    visu_markers.markers.push_back(visu_marker_left);
+
+    // Calculate right
+    visualization_msgs::Marker visu_marker_right;
+    visu_marker_right.id = 3;
+    visu_marker_right.color.a = 1.0;
+    visu_marker_right.color.r = 1.0;
+    visu_marker_right.color.g = 0.0;
+    visu_marker_right.color.b = 0.0;
+    deviation.right = calculateMarkerDeviation(marker_right_link_, current_path_index_right_, visu_marker_right);
+    visu_markers.markers.push_back(visu_marker_right);
     
     pub_deviation_.publish(deviation);    
     pub_deviation_markers_.publish(visu_markers);
@@ -115,7 +115,7 @@ double RobotrainerPathDeviation::calculateMarkerDeviation(std::string marker, in
     if (current_path_index == -1)
     {
         double dist_front = tf2::tf2Distance(path_.front(), marker_location);
-        ROS_INFO("Calculating distance to front, %f...", dist_front);
+        ROS_INFO_THROTTLE(1, "Calculating distance to front, %f...", dist_front);
 //         double dist_back = tf2::tf2Distance(path_.back(), marker_location);
 
         if (dist_front < 0.3)
@@ -137,22 +137,16 @@ double RobotrainerPathDeviation::calculateMarkerDeviation(std::string marker, in
         }
     }  
     
-//     double line_next_distance = -1;
     double line_next_point_distance = -1;
     if (current_path_index+1 < path_.size()) {
         line_next_point_distance = tf2::tf2Distance(path_[current_path_index+1], marker_location);
-//         line_next_distance = getDistancePointLine(marker_location.x(), marker_location.y(), path_[current_path_index].x(), path_[current_path_index].y(), path_[current_path_index+1].x(), path_[current_path_index+1].y());
-//         ROS_INFO("Line next distance: next (x: %f; y: %f ), distance: %f", path_[current_path_index+1].x(), path_[current_path_index+1].y(), getDistancePointLine(marker_location.x(), marker_location.y(), path_[current_path_index].x(), path_[current_path_index].y(), path_[current_path_index+1].x(), path_[current_path_index+1].y()));
     }
-//     double line_previous_distance = -1;
     double line_previous_point_distance = -1;
     if (current_path_index > 0) {
         line_previous_point_distance = tf2::tf2Distance(path_[current_path_index-1], marker_location);
-//         line_previous_distance = getDistancePointLine(marker_location.x(), marker_location.y(), path_[current_path_index].x(), path_[current_path_index].y(), path_[current_path_index-1].x(), path_[current_path_index-1].y());
-//         ROS_INFO("Line previous distance: (x: %f; y: %f ), distance: %f", path_[current_path_index-1].x(), path_[current_path_index-1].y(), getDistancePointLine(marker_location.x(), marker_location.y(), path_[current_path_index].x(), path_[current_path_index].y(), path_[current_path_index-1].x(), path_[current_path_index-1].y()));
     }
     
-    ROS_INFO("Line next distance: %f, line previous distance: %f", line_next_point_distance, line_previous_point_distance);
+    ROS_DEBUG("Line next distance: %f, line previous distance: %f", line_next_point_distance, line_previous_point_distance);
 
     if (line_previous_point_distance != -1 and line_next_point_distance != -1 and (line_previous_point_distance < line_next_point_distance)) {
         direction = -1;
@@ -164,9 +158,8 @@ double RobotrainerPathDeviation::calculateMarkerDeviation(std::string marker, in
     {
         current_path_index += direction;
     }
-//     ROS_INFO("Current point (%f), next point (%f). Distance to the next point: %f", tf2::tf2Distance(path_[current_path_index], marker_location), tf2::tf2Distance(path_[current_path_index+direction], marker_location), tf2::tf2Distance(path_[current_path_index], marker_location) - tf2::tf2Distance(path_[current_path_index+direction], marker_location));
     
-    ROS_INFO("Current index: %d", current_path_index);
+    ROS_DEBUG("Current index: %d", current_path_index);
     
     visu_marker.header.frame_id = "map";
     visu_marker.header.stamp = ros::Time();
