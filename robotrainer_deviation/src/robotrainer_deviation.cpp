@@ -137,23 +137,28 @@ double RobotrainerPathDeviation::calculateMarkerDeviation(std::string marker, in
         }
     }  
     
-    double line_next_distance = -1;
-    double line_previous_point_distance = -1;
+//     double line_next_distance = -1;
+    double line_next_point_distance = -1;
     if (current_path_index+1 < path_.size()) {
-        line_next_distance = getDistancePointLine(marker_location.x(), marker_location.y(), path_[current_path_index].x(), path_[current_path_index].y(), path_[current_path_index+1].x(), path_[current_path_index+1].y());
-        ROS_INFO("Line next distance: next (x: %f; y: %f ), distance: %f", path_[current_path_index+1].x(), path_[current_path_index+1].y(), getDistancePointLine(marker_location.x(), marker_location.y(), path_[current_path_index].x(), path_[current_path_index].y(), path_[current_path_index+1].x(), path_[current_path_index+1].y()));
+        line_next_point_distance = tf2::tf2Distance(path_[current_path_index+1], marker_location);
+//         line_next_distance = getDistancePointLine(marker_location.x(), marker_location.y(), path_[current_path_index].x(), path_[current_path_index].y(), path_[current_path_index+1].x(), path_[current_path_index+1].y());
+//         ROS_INFO("Line next distance: next (x: %f; y: %f ), distance: %f", path_[current_path_index+1].x(), path_[current_path_index+1].y(), getDistancePointLine(marker_location.x(), marker_location.y(), path_[current_path_index].x(), path_[current_path_index].y(), path_[current_path_index+1].x(), path_[current_path_index+1].y()));
     }
-    double line_previous_distance = -1;
+//     double line_previous_distance = -1;
+    double line_previous_point_distance = -1;
     if (current_path_index > 0) {
-        line_previous_distance = getDistancePointLine(marker_location.x(), marker_location.y(), path_[current_path_index].x(), path_[current_path_index].y(), path_[current_path_index-1].x(), path_[current_path_index-1].y());
-        ROS_INFO("Line previous distance: (x: %f; y: %f ), distance: %f", path_[current_path_index-1].x(), path_[current_path_index-1].y(), getDistancePointLine(marker_location.x(), marker_location.y(), path_[current_path_index].x(), path_[current_path_index].y(), path_[current_path_index-1].x(), path_[current_path_index-1].y()));
+        line_previous_point_distance = tf2::tf2Distance(path_[current_path_index-1], marker_location);
+//         line_previous_distance = getDistancePointLine(marker_location.x(), marker_location.y(), path_[current_path_index].x(), path_[current_path_index].y(), path_[current_path_index-1].x(), path_[current_path_index-1].y());
+//         ROS_INFO("Line previous distance: (x: %f; y: %f ), distance: %f", path_[current_path_index-1].x(), path_[current_path_index-1].y(), getDistancePointLine(marker_location.x(), marker_location.y(), path_[current_path_index].x(), path_[current_path_index].y(), path_[current_path_index-1].x(), path_[current_path_index-1].y()));
     }
     
-    ROS_INFO("Line next distance: %f, line previous distance: %f", line_next_distance, line_previous_distance);
+    ROS_INFO("Line next distance: %f, line previous distance: %f", line_next_point_distance, line_previous_point_distance);
 
-    if (line_previous_distance != -1 and line_next_distance != -1 and (line_previous_distance < line_next_distance)) {
+    if (line_previous_point_distance != -1 and line_next_point_distance != -1 and (line_previous_point_distance < line_next_point_distance)) {
         direction = -1;
     }
+    
+    deviation = getDistancePointLine(marker_location.x(), marker_location.y(), path_[current_path_index].x(), path_[current_path_index].y(), path_[current_path_index+direction].x(), path_[current_path_index+direction].y());
 
     if (tf2::tf2Distance(path_[current_path_index], marker_location) > tf2::tf2Distance(path_[current_path_index+direction], marker_location))
     {
