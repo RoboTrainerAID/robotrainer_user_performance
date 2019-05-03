@@ -29,6 +29,7 @@
   <depend>classical_user_performance</depend>
   <exec_depend>robotrainer_deviation</exec_depend>
   <exec_depend>robotrainer_heika_classification</exec_depend>
+  <exec_depend>classical_user_performance</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
