@@ -26,6 +26,7 @@
 
 
   <buildtool_depend>catkin</buildtool_depend>
+  <depend>classical_user_performance</depend>
   <exec_depend>robotrainer_deviation</exec_depend>
   <exec_depend>robotrainer_heika_classification</exec_depend>
 
