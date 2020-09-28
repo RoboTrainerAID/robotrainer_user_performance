@@ -34,7 +34,8 @@ RobotrainerPathDeviation::RobotrainerPathDeviation(ros::NodeHandle& nh): nh_(nh)
 
     pub_deviation_ = nh_.advertise<robotrainer_deviation::RobotrainerUserDeviation>("robotrainer_deviation", 10);
     pub_deviation_markers_ = nh_.advertise<visualization_msgs::MarkerArray>("robotrainer_deviation_markers", 10);
-
+    pub_current_path_index_ = nh_.advertise<robotrainer_deviation::PathIndex>("current_path_index", 10);
+    
     srv_configure_ = nh_.advertiseService("configure", &RobotrainerPathDeviation::configure, this);
 
     updateTimer_ = nh_.createTimer(ros::Rate(update_rate_), &RobotrainerPathDeviation::update, this, false, false);
@@ -51,7 +52,8 @@ void RobotrainerPathDeviation::update(const ros::TimerEvent &event)
     // Calculate distance to center
     visualization_msgs::MarkerArray visu_markers;
     robotrainer_deviation::RobotrainerUserDeviation deviation;
-
+    robotrainer_deviation::PathIndex current_path_index;
+    
     // Calculate front
     visualization_msgs::Marker visu_marker_front;
     visu_marker_front.id = 1;
@@ -59,7 +61,9 @@ void RobotrainerPathDeviation::update(const ros::TimerEvent &event)
     visu_marker_front.color.r = 1.0;
     visu_marker_front.color.g = 0.0;
     visu_marker_front.color.b = 1.0;
+    ROS_INFO_THROTTLE(1, "Current index: %d", current_path_index_front_);
     deviation.front = calculateMarkerDeviation(marker_front_link_, current_path_index_front_, visu_marker_front);
+    current_path_index.front = current_path_index_front_;
     visu_markers.markers.push_back(visu_marker_front);
     
     // Calculate left
@@ -70,6 +74,7 @@ void RobotrainerPathDeviation::update(const ros::TimerEvent &event)
     visu_marker_left.color.g = 0.0;
     visu_marker_left.color.b = 1.0;
     deviation.left = calculateMarkerDeviation(marker_left_link_, current_path_index_left_, visu_marker_left);
+    current_path_index.left = current_path_index_left_;
     visu_markers.markers.push_back(visu_marker_left);
 
     // Calculate right
@@ -80,10 +85,12 @@ void RobotrainerPathDeviation::update(const ros::TimerEvent &event)
     visu_marker_right.color.g = 0.0;
     visu_marker_right.color.b = 0.0;
     deviation.right = calculateMarkerDeviation(marker_right_link_, current_path_index_right_, visu_marker_right);
+    current_path_index.right = current_path_index_right_;
     visu_markers.markers.push_back(visu_marker_right);
     
     pub_deviation_.publish(deviation);    
     pub_deviation_markers_.publish(visu_markers);
+    pub_current_path_index_.publish(current_path_index);
 }
 
 double RobotrainerPathDeviation::getDistancePointLine(double px, double py, double l1x, double l1y, double l2x, double l2y)
@@ -116,9 +123,10 @@ double RobotrainerPathDeviation::calculateMarkerDeviation(std::string marker, in
     {
         double dist_front = tf2::tf2Distance(path_.front(), marker_location);
         ROS_INFO_THROTTLE(1, "Calculating distance to front, %f...", dist_front);
+        
 //         double dist_back = tf2::tf2Distance(path_.back(), marker_location);
 
-        if (dist_front < 0.3)
+        if (dist_front < 1.30) // standard is 0.3 reworked to make working with rosbags easier
         {
             current_path_index = 0;
         }
@@ -148,7 +156,7 @@ double RobotrainerPathDeviation::calculateMarkerDeviation(std::string marker, in
     
     ROS_DEBUG("Line next distance: %f, line previous distance: %f", line_next_point_distance, line_previous_point_distance);
 
-    if (line_previous_point_distance != -1 and line_next_point_distance != -1 and (line_previous_point_distance < line_next_point_distance)) {
+       if (line_previous_point_distance != -1 and line_next_point_distance != -1 and (line_previous_point_distance < line_next_point_distance)) {
         direction = -1;
     }
     
@@ -157,6 +165,23 @@ double RobotrainerPathDeviation::calculateMarkerDeviation(std::string marker, in
     if (tf2::tf2Distance(path_[current_path_index], marker_location) > tf2::tf2Distance(path_[current_path_index+direction], marker_location))
     {
         current_path_index += direction;
+    }
+
+    // reset if deviation becomes to big
+    if (deviation > 0.7) {
+        ROS_DEBUG("Current devation: %d", deviation);
+        double current_min_deviation = deviation;
+        double current_closest_path_index = current_path_index;
+        // check all indecies to see if one ist closer
+        for(int i = 0;i < path_.size(); i++) {
+             double curr_dev = tf2::tf2Distance(path_[i], marker_location);
+             if (curr_dev < current_min_deviation) {
+                 current_min_deviation = curr_dev;
+                 current_closest_path_index = i;
+             }
+        }
+        deviation = current_min_deviation;
+        current_path_index = current_closest_path_index;
     }
     
     ROS_DEBUG("Current index: %d", current_path_index);

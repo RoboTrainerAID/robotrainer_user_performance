@@ -32,6 +32,7 @@ endif()
 add_message_files(
   FILES
   RobotrainerUserDeviation.msg
+  PathIndex.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
