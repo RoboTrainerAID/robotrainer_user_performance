@@ -11,6 +11,7 @@
 #include <tf2_ros/transform_listener.h>
 
 #include <robotrainer_deviation/RobotrainerUserDeviation.h>
+#include <robotrainer_deviation/PathIndex.h>
 #include <robotrainer_parameters/shared_params.h>
 
 #include <std_srvs/Trigger.h>
@@ -48,6 +49,7 @@ private:
     std::vector<tf2::Vector3> path_; ///< Stores the sections of the path, where pathtracking should be enabled. A path section consists of path points.
 
     ros::Publisher pub_deviation_;
+    ros::Publisher pub_current_path_index_;
     ros::Publisher pub_deviation_markers_;
 
     std::string marker_front_link_;
