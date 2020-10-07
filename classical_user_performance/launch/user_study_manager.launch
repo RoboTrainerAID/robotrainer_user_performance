@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="yaml_to_load" default="$(find classical_user_performance)/example_configs/user_study_manager.yaml"/>
+
+  <node name="robotrainer_user_study_manager" pkg="classical_user_performance" type="user_study_manager.py">
+    <rosparam command="load" file="$(arg yaml_to_load)"/>
+  </node>
+
+</launch>

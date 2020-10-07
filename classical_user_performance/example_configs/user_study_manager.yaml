@@ -1,0 +1,13 @@
+frequency: 1  # Study status publishing frequency
+study_name: ""
+task_ids: ["T1", "T2", "T3", "T4", "END"]
+user_id_prefix: "U_"
+user_id_length: 3  # e.g. 001 (max: 999)
+
+# String has format:
+# study_name + output_string_separator +
+# user_id_prefix + user_id + output_string_separator +
+# task_id + "-" + trial
+output_string_separator: "_"
+
+use_led_output: True

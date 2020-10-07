@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+from dynamic_reconfigure.parameter_generator_catkin import *
+
+
+########################  This is not Working
+
+gen = ParameterGenerator()
+
+user_performance = gen.add_group("User Performance Parameters", type="collapse")
+
+user_performance.add("reload" bool_t, 0, "Load Parameters from dynamic_reconfigure window.", False)
+user_performance.add("try", string_t, "", "Try number", default="")
+user_performance.add("try", task_id, "", "Task ID", default="")
+user_performance.add("try", user_id, "", "User ID", default="")
+
+exit(gen.generate("classical_user_performance", "classical_user_performance", "RoboTrainerClassicalUserPerformance"))
+
