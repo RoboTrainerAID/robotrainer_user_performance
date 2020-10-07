@@ -1,0 +1,13 @@
+configure: 
+    task_id: "A1"
+    path_id : "scenario_id201910211608"
+    y_reversed: false
+    path_difficulties: ["LINE1", "TURNING1", "TURNING2","END"]
+    features: ["velocity", "deviation", "input_force", "orientation"]
+pivot_points:
+#- {pathindex: point28, direction: FRONT, pathdifficulty: TURNING1, order: ASC}
+     - {pathindex: 0, direction: "FRONT", pathdifficulty: "LINE1"}
+     - {pathindex: 72, direction: "BACK", pathdifficulty: "LINE1"}
+     - {pathindex: 140, direction: "END", pathdifficulty: "END"}
+   
+ 
