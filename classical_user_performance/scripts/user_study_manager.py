@@ -11,7 +11,7 @@ from iirob_led.msg import BlinkyAction, BlinkyGoal
 from std_msgs.msg import String, ColorRGBA
 
 import dynamic_reconfigure.server
-from classical_user_performance.cfg import UserStudyManagerConfig, TutorialsConfig
+from classical_user_performance.cfg import UserStudyManagerConfig
 
 
 class UserStudyManager:
@@ -48,6 +48,8 @@ class UserStudyManager:
         self.format_user_id = '{UserID:0' + str(self.user_id_length) + 'd}'
         self.format_string = (self.study_name + self.user_id_prefix + self.format_user_id +
                               self.output_string_separator + '{TaskID}' + '-' + '{TrialNr}')
+        self.task_record_format = (self.study_name + self.user_id_prefix + self.format_user_id +
+                                   self.output_string_separator + '{TaskID}')
         rospy.loginfo("The status string will have format: " + self.format_string)
 
         # initialize publishers and action clients
@@ -55,7 +57,7 @@ class UserStudyManager:
             "~study_status", String, queue_size=1)
 
         self.led_client = actionlib.SimpleActionClient(
-          '/rosy_test/leds_rectangle/blinky', BlinkyAction)
+          '/leds_rectangle/blinky', BlinkyAction)
         self.led_goal = None
         if self.led_client.wait_for_server(rospy.Duration(1)):
             self.led_goal = BlinkyGoal(ColorRGBA(0.8, 1.0, 0, 0.8), 10, 0.1, 0.1, 0, 0, 0, False, False)
