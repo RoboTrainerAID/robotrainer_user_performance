@@ -4,6 +4,11 @@ task_ids: ["T1", "T2", "T3", "T4", "END"]
 user_id_prefix: "U_"
 user_id_length: 3  # e.g. 001 (max: 999)
 
+external_commands: [
+  - "echo_name": "echo 'I am great'"]
+  
+run_command_on_task_change: ["echo_name", "record_cameras"]
+
 # String has format:
 # study_name + output_string_separator +
 # user_id_prefix + user_id + output_string_separator +
