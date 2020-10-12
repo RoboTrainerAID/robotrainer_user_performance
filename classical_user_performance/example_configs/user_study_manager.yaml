@@ -5,9 +5,9 @@ user_id_prefix: "U_"
 user_id_length: 3  # e.g. 001 (max: 999)
 
 external_commands: [
-  - "echo_name": "echo 'I am great'"]
+  - "echo_name": "echo 'The answer is 42!'"]
   
-run_command_on_task_change: ["echo_name", "record_cameras"]
+run_command_on_task_change: ["echo_name"]
 
 # String has format:
 # study_name + output_string_separator +
