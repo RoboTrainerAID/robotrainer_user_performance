@@ -22,14 +22,16 @@ namespace robotrainer_user
 class RobotrainerPathDeviation
 {
 public:
-    RobotrainerPathDeviation(ros::NodeHandle &nh);
+    RobotrainerPathDeviation(ros::NodeHandle & nh);
 
-    bool configure(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res);
+    bool configure(std_srvs::Trigger::Request & req, std_srvs::Trigger::Response & res);
+
+    bool reset(std_srvs::Trigger::Request & req, std_srvs::Trigger::Response & res);
 
 private:
     double getDistancePointLine(double px, double py, double l1x, double l1y, double l2x, double l2y);
 
-    void update(const ros::TimerEvent &event);
+    void update(const ros::TimerEvent & event);
 
     ros::NodeHandle nh_;
 
@@ -41,9 +43,9 @@ private:
     robotrainer_parameters::SharedParams* sp_object_ptr_; ///< Object that manages the shared parameters
     robotrainer_parameters::SharedParamsParameters* ns_params_ptr_; ///< Commonly used parameters (namespace names)
 
-    double calculateMarkerDeviation(std::string marker, int& current_path_index, visualization_msgs::Marker& visu_marker);
+    double calculateMarkerDeviation(const std::string & marker, int & current_path_index, visualization_msgs::Marker & visu_marker);
 
-    bool updateMarkerLocation(std::string frame, geometry_msgs::TransformStamped& transform);
+    bool updateMarkerLocation(const std::string & frame, geometry_msgs::TransformStamped & transform);
 
     // Vector-containers to hold the path tracking sections
     std::vector<tf2::Vector3> path_; ///< Stores the sections of the path, where pathtracking should be enabled. A path section consists of path points.
@@ -65,6 +67,7 @@ private:
     ros::Timer updateTimer_;
 
     ros::ServiceServer srv_configure_;
+    ros::ServiceServer srv_reset_;
 };
 
 };

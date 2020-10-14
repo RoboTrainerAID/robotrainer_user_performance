@@ -13,6 +13,8 @@ from std_msgs.msg import String, ColorRGBA
 import dynamic_reconfigure.server
 from classical_user_performance.cfg import UserStudyManagerConfig
 
+from std_srvs.srv import Trigger
+
 
 class UserStudyManager:
 
@@ -83,8 +85,9 @@ class UserStudyManager:
         self.format_user_id = '{UserID:0' + str(self.user_id_length) + 'd}'
         self.format_string = (self.study_name + self.user_id_prefix + self.format_user_id +
                               self.output_string_separator + '{TaskID}' + '-' + '{TrialNr}')
-        self.task_record_format = (self.study_name + self.user_id_prefix + self.format_user_id +
-                                   self.output_string_separator + '{TaskID}\n')
+        #self.task_record_format = (self.study_name + self.user_id_prefix + self.format_user_id +
+                                   #self.output_string_separator + '{TaskID}\n')
+        self.task_record_format = self.format_string
         rospy.loginfo("The status string will have format: " + self.format_string)
 
         # initialize publishers and action clients
@@ -94,6 +97,9 @@ class UserStudyManager:
             #"~study", StudyStatus, queue_size=1)
         
         self.rosbag_feedback_sub = rospy.Subscriber("/begin_write", String, self.rosbag_feedback_callback)
+
+        self.sync_srv = rospy.ServiceProxy("/rt2_sca_sync_node/send_sync_signal_1s", Trigger)
+        self.deviation_reset = rospy.ServiceProxy("/robotrainer_deviation/reset", Trigger)
 
         self.led_client = actionlib.SimpleActionClient(
           '/leds_rectangle/blinky', BlinkyAction)
@@ -126,15 +132,27 @@ class UserStudyManager:
                     self.write_manager_status_file()
                   
                 if self.trial_changed:
-                    if not self.stop_on_trial_change:
-                        self.update_command_from_list_and_call(self.update_external_status_on_trial_change,
-                                                            str(self.trial-1),
-                                                            "STOP")
-                        rospy.sleep(0.5)
+                    #if not self.stop_on_trial_change:
+                        #self.update_command_from_list_and_call(self.update_external_status_on_trial_change,
+                                                            #str(self.trial-1),
+                                                            #"STOP")
+                        #rospy.sleep(0.5)
                     
                     self.update_command_from_list_and_call(self.update_external_status_on_trial_change,
                                                            str(self.trial),
                                                            "START")
+                    
+                    # TODO(Denis): make this parameterizable
+                    rospy.logwarn("Waiting before triggering sync services")
+                    rospy.sleep(rospy.Duration(2))
+                    rospy.logwarn("Triggering sync services")
+                    resp = self.sync_srv()
+                    if not resp.success:
+                        rospy.logerr("Sync service responded with error...")
+                    resp = self.deviation_reset()
+                    if not resp.success:
+                        rospy.logerr("Deviation reset service responded with error...")
+                    
                     self.trial_changed = False
                   
                 if self.task_changed:
@@ -322,7 +340,7 @@ class UserStudyManager:
                 rospy.logdebug("Writing {} to {}".format(command, status_file_name))
                 file = open(self.external_status_files[status_file_name], 'w')
                 file.writelines([command + "\n", 
-                                 self.task_record_format.format(UserID=self.user_id, TaskID=self.task_id)])
+                                 self.task_record_format.format(UserID=self.user_id, TaskID=self.task_id, TrialNr=self.trial)])
                 file.close()
 
 
