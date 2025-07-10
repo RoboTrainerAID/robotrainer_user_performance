@@ -4,6 +4,7 @@ import sys
 import roslib
 roslib.load_manifest('diagnostic_updater')
 import rospy
+import rospkg
 
 import actionlib
 import diagnostic_updater
@@ -21,8 +22,6 @@ class UserStudyManager:
     def __init__(self):
         rospy.init_node("user_study_manager")
         
-        self.callback_first_time = True
-
         self.diagnostic = diagnostic_updater.Updater()
         self.diagnostic.add("User Study Manager", self.diagnostics_callback)
         self.diagnostic.setHardwareID("User_Study_Manager")
@@ -35,66 +34,45 @@ class UserStudyManager:
         self.user_id_length = rospy.get_param("~user_id_length", 3)
         self.output_string_separator = rospy.get_param("~output_string_separator", "")
         self.use_led_output = rospy.get_param("~user_id_prefix", "")
-        # TODO: add here possibility to use custom list of user ids
-        # self.user_id_list = rospy.get_param("~user_id_list", [None])
-        # TODO: add here maximal number of trials for each task - could be nice used
-        # self.num_trials = rospy.get_param("~num_trials", [None])
-        
-        self.stop_on_trial_change = rospy.get_param("~stop_on_trial_change", False)
-        self.stop_on_task_change = rospy.get_param("~stop_on_task_change", False)
-        self.stop_on_user_id_change = rospy.get_param("~stop_on_user_id_change", False)
-        
+
         self.manager_status_file = rospy.get_param("~manager_status_file", None)
         self.data_set_from_file = False
         if (self.manager_status_file is None):
-            self.manager_status_file = "./study_manager.status"
+            self.manager_status_file = "/user_study_manager.status"
             rospy.logwarn("Study Manager uses default status file '{}'".format(self.manager_status_file))
-        try:
-            file = open(self.manager_status_file, "r")
-            lines = file.readlines()
-            if (self.study_name == line[0]):
-                self.user_id = int(line[1])
-                self.task_id = line[2]
-                self.trial = int(line[3])
-                self.data_set_from_file = True
-            else:
-                rospy.logwarn("Study Manager status file is from the wrong study. Using default params. The old status file will be overwritten!")
-        except:
-            rospy.logwarn("Manager status file not found, using default start parameters")
-        self.external_status_files = rospy.get_param("~external_status_files", None)
-        #self.external_status_files = {}
-        #if not (ext_status_files is None):
-            #for elem in ext_status_files:
-                #self.external_status_files.update(elem)
-        self.update_external_status_on_trial_change = rospy.get_param("~update_external_status_on_trial_change", {})
-        self.update_external_status_on_task_change = rospy.get_param("~update_external_status_on_task_change", {})
+
+        pkg_dir = rospkg.RosPack().get_path("robotrainer_study_automatic_assessment")
+        self.manager_status_file = pkg_dir + self.manager_status_file
+        rospy.logwarn("Study Manager status file: {}".format(self.manager_status_file))
+
+        study_name_from_config = self.study_name
+        self.load_study_manager_status_file()
+        if study_name_from_config != self.study_name:
+            rospy.logwarn("Study Manager status file is from the wrong study. Using default params. The old status file will be overwritten!")
+            self.data_set_from_file = False
+            self.study_name = study_name_from_config
         
         # initialize study variables
-        if self.study_name:
-          self.study_name += self.output_string_separator
+        if not self.data_set_from_file:
+            self.user_id = -1
+            self.task_id = "END"
+            self.trial = -1
 
-        self.user_id = -1
-        self.task_id = ""
-        self.trial = -1
-        self.publish_status_and_record = False
-        
         self.trial_changed = False
         self.task_changed = False
         self.user_id_changed = False
 
         self.format_user_id = '{UserID:0' + str(self.user_id_length) + 'd}'
-        self.format_string = (self.study_name + self.user_id_prefix + self.format_user_id +
+        self.format_string = (self.study_name + self.output_string_separator + self.user_id_prefix + self.format_user_id +
                               self.output_string_separator + '{TaskID}' + '-' + '{TrialNr}')
-        #self.task_record_format = (self.study_name + self.user_id_prefix + self.format_user_id +
-                                   #self.output_string_separator + '{TaskID}\n')
         self.task_record_format = self.format_string
         rospy.loginfo("The status string will have format: " + self.format_string)
+        rospy.logwarn("Study status: " + self.format_string.format(
+            UserID=self.user_id, TaskID=self.task_id, TrialNr=self.trial))
 
         # initialize publishers and action clients
         self.status_publisher_string = rospy.publisher = rospy.Publisher(
             "~study_status", String, queue_size=1)
-        #self.status_publisher = rospy.publisher = rospy.Publisher(
-            #"~study", StudyStatus, queue_size=1)
         
         self.rosbag_feedback_sub = rospy.Subscriber("/begin_write", String, self.rosbag_feedback_callback)
 
@@ -122,80 +100,39 @@ class UserStudyManager:
         
 
     def timer_callback(self, event): 
-        if self.publish_status_and_record:
-            if self.user_id != -1 and self.trial != -1:
-                self.status_publisher_string.publish(
-                  self.format_string.format(
-                    UserID=self.user_id, TaskID=self.task_id, TrialNr=self.trial))
-                  
-                if self.trial_changed or self.task_changed or self.user_id_changed:
-                    self.write_manager_status_file()
-                  
-                if self.trial_changed:
-                    #if not self.stop_on_trial_change:
-                        #self.update_command_from_list_and_call(self.update_external_status_on_trial_change,
-                                                            #str(self.trial-1),
-                                                            #"STOP")
-                        #rospy.sleep(0.5)
-                    
-                    self.update_command_from_list_and_call(self.update_external_status_on_trial_change,
-                                                           str(self.trial),
-                                                           "START")
-                    
-                    # TODO(Denis): make this parameterizable
-                    rospy.logwarn("Waiting before triggering sync services")
-                    rospy.sleep(rospy.Duration(2))
-                    rospy.logwarn("Triggering sync services")
-                    resp = self.sync_srv()
-                    if not resp.success:
-                        rospy.logerr("Sync service responded with error...")
-                    resp = self.deviation_reset()
-                    if not resp.success:
-                        rospy.logerr("Deviation reset service responded with error...")
-                    
-                    self.trial_changed = False
-                  
-                if self.task_changed:
-                    self.update_command_from_list_and_call(self.update_external_status_on_task_change,
-                                                           self.task_id,
-                                                           "START")
-                    self.task_changed = False
-                    
-                if self.user_id_changed:
-                    self.user_id_changed = False
-                    
-            else:
-                rospy.logerr_throttle(5, "User_id or Trial is not set therefore the study_status is not published!")
-                
-        else:
-            if self.trial_changed:
-                self.trial_changed = False
-                
-            if self.task_changed:
-                # TODO: this is not logically correct, since task ID will also be triggered is published goes off,
-                # It will work for now
-                # I should probably set some running flag
-                previous_id = self.task_ids.index(self.task_id)-1
-                if (previous_id == -1):
-                    previous_id = len(self.task_ids)-1
-                self.update_command_from_list_and_call(self.update_external_status_on_task_change,
-                                                       self.task_ids[previous_id],
-                                                           "STOP")
-                self.task_changed = False
-                
-            if self.user_id_changed:
-                self.user_id_changed = False
-
         self.diagnostic.update()
+
+        if self.user_id == -1 or self.trial == -1:
+            rospy.logerr_throttle(5, "User_id or Trial is not set therefore the study_status is not published!")
+            return
         
-    def update_command_from_list_and_call(self, update_dict, update_key, command):
-        call_list = []
-        if "all" in update_dict.keys():
-            call_list.extend(update_dict["all"])
-        if update_key in update_dict.keys():
-            call_list.extend(update_dict[update_key])
-        self.write_status_files(call_list, command)
-        
+        self.status_publisher_string.publish(
+            self.format_string.format(
+            UserID=self.user_id, TaskID=self.task_id, TrialNr=self.trial))
+            
+        if self.trial_changed or self.task_changed or self.user_id_changed:
+            self.write_study_manager_status_file()
+            
+        if self.trial_changed:
+            # TODO(Denis): make this parameterizable
+            rospy.logwarn("Waiting before triggering sync services")
+            rospy.sleep(rospy.Duration(2))
+            rospy.logwarn("Triggering sync services")
+            # resp = self.sync_srv()
+            # if not resp.success:
+            #     rospy.logerr("Sync service responded with error...")
+            # resp = self.deviation_reset()
+            # if not resp.success:
+            #     rospy.logerr("Deviation reset service responded with error...")
+            
+            self.trial_changed = False
+            
+        if self.task_changed:
+            self.task_changed = False
+            
+        if self.user_id_changed:
+            self.user_id_changed = False
+    
 
     def rosbag_feedback_callback(self, message):
         # TODO(denis): Check if there is right thing started
@@ -203,9 +140,7 @@ class UserStudyManager:
 
 
     def diagnostics_callback(self, stat):
-        if not self.publish_status_and_record:
-            stat.summary(1, "Study status is not published!")
-        elif self.user_id == -1 or self.trial == -1:
+        if self.user_id == -1 or self.trial == -1:
             stat.summary(2, "UserID or Trial-Nr. is not set!")
         else:
             stat.summary(0, "Study status is published!")
@@ -215,16 +150,12 @@ class UserStudyManager:
         stat.add("Current User", self.format_user_id.format(UserID=self.user_id))
         stat.add("Current Task", self.task_id)
         stat.add("Current Trial", self.trial)
-        
-        if not (self.external_status_files is None):
-            for key in self.external_status_files.keys():
-                stat.add("Process '{}'".format(key), self.read_pid_status(key))
                             
         return stat
 
 
     def reconfigure_callback(self, config, level):
-        if not (self.first_reconfigure_callback and self.data_set_from_file):
+        if not self.first_reconfigure_callback:
             next_trial = self.trial
             if config.next_trial:
                 if (self.trial == -1):
@@ -282,50 +213,21 @@ class UserStudyManager:
                 self.user_id = next_user_id
                 self.user_id_changed = True
 
-            new_publish_status = self.publish_status_and_record
-            if (self.stop_on_trial_change and self.trial_changed or
-                self.stop_on_task_change and self.task_changed or
-                self.stop_on_user_id_change and self.user_id_changed or
-                self.callback_first_time):
-                new_publish_status = False
-                self.callback_first_time = False
-            else:
-                if (self.publish_status_and_record != config.publish_status_and_record):
-                    self.trial_changed = True
-                    self.task_changed = True
-                    self.user_id_changed = True
-                new_publish_status = config.publish_status_and_record
-                
-            if (new_publish_status != self.publish_status_and_record):
-                self.trial_changed = True
-                self.task_changed = True
-                self.user_id_changed = True
-            self.publish_status_and_record = new_publish_status
-
-        config.publish_status_and_record = self.publish_status_and_record
         config.next_trial = False
         config.trial = str(self.trial)
         config.next_task = False
         config.task_id = self.task_id
-        config.task_stop_status_files = False
         config.next_user = False
         config.user_id = self.format_user_id.format(UserID=self.user_id)
         
-        self.callback_first_time = False;
+        self.first_reconfigure_callback = False
         if not (self.led_client is None):
             self.led_client.send_goal(self.led_goal)
 
         return config
-    
-
-    def read_pid_status(self, status_file_name):
-        file = open(self.external_status_files[status_file_name] + '.pid', 'r')
-        pid = file.readline()
-        file.close()
-        return pid
 
     
-    def write_manager_status_file(self):
+    def write_study_manager_status_file(self):
         file = open(self.manager_status_file, 'w')
         file.writelines([self.study_name + "\n",
                          self.format_user_id.format(UserID=self.user_id) + "\n",
@@ -333,15 +235,21 @@ class UserStudyManager:
                          str(self.trial) + "\n"])
         file.close()
 
-
-    def write_status_files(self, status_files, command):
-        if not (status_files is None):
-            for status_file_name in status_files:
-                rospy.logdebug("Writing {} to {}".format(command, status_file_name))
-                file = open(self.external_status_files[status_file_name], 'w')
-                file.writelines([command + "\n", 
-                                 self.task_record_format.format(UserID=self.user_id, TaskID=self.task_id, TrialNr=self.trial)])
-                file.close()
+    def load_study_manager_status_file(self):
+        try:
+            with open(self.manager_status_file, 'r') as file:
+                lines = file.readlines()
+                if len(lines) >= 4:
+                    self.study_name = lines[0].strip()
+                    self.user_id = int(lines[1].strip())
+                    self.task_id = lines[2].strip()
+                    self.trial = int(lines[3].strip())
+                    self.data_set_from_file =  True
+                    rospy.loginfo("Manager status file successfully read and variables updated.")
+                else:
+                    rospy.logwarn("Manager status file does not contain enough data. Using default parameters.")
+        except Exception as e:
+            rospy.logwarn("Failed to read manager status file: {}. Using default parameters.".format(e))
 
 
 def main(args):
