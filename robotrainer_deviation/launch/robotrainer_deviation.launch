@@ -2,7 +2,7 @@
 <launch>
 
   <node name="robotrainer_deviation" pkg="robotrainer_deviation" type="robotrainer_deviation_node" output="screen">
-    <param name="/use_sime_time" value="true"/>
+    <!-- <param name="/use_sim_time" value="true"/> -->
     <param name="root_frame" value="map" />
     <param name="child_frame" value="base_link" />    
     <param name="update_rate" value="100.0" type="double" />

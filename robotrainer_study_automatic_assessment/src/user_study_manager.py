@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import os
 import roslib
 roslib.load_manifest('diagnostic_updater')
 import rospy
@@ -14,7 +15,8 @@ from std_msgs.msg import String, ColorRGBA
 import dynamic_reconfigure.server
 from robotrainer_study_automatic_assessment.cfg import UserStudyManagerConfig
 
-from std_srvs.srv import Trigger
+from std_srvs.srv import Trigger, Empty
+import yaml
 
 
 class UserStudyManager:
@@ -34,6 +36,8 @@ class UserStudyManager:
         self.user_id_length = rospy.get_param("~user_id_length", 3)
         self.output_string_separator = rospy.get_param("~output_string_separator", "")
         self.use_led_output = rospy.get_param("~user_id_prefix", "")
+        self.scenario_ns = "/" + rospy.get_param("/params/project_ns", "robotrainer") + "/" + rospy.get_param("/params/scenario_ns", "scenario")
+        self.scenario_folder = rospkg.RosPack().get_path("robotrainer_data_service") + "/yamls"
 
         self.manager_status_file = rospy.get_param("~manager_status_file", None)
         self.data_set_from_file = False
@@ -71,23 +75,40 @@ class UserStudyManager:
             UserID=self.user_id, TaskID=self.task_id, TrialNr=self.trial))
 
         # initialize publishers and action clients
-        self.status_publisher_string = rospy.publisher = rospy.Publisher(
-            "~study_status", String, queue_size=1)
-        
+        self.status_publisher_string = rospy.publisher = rospy.Publisher("~study_status", String, queue_size=1)
         self.rosbag_feedback_sub = rospy.Subscriber("/begin_write", String, self.rosbag_feedback_callback)
-
         self.sync_srv = rospy.ServiceProxy("/rt2_sca_sync_node/send_sync_signal_1s", Trigger)
         self.deviation_reset = rospy.ServiceProxy("/robotrainer_deviation/reset", Trigger)
+        self.deviation_configure = rospy.ServiceProxy("/robotrainer_deviation/configure", Trigger)
+        self.led_client = actionlib.SimpleActionClient('/leds_rectangle/blinky', BlinkyAction)
+        self.topic_check_srv = rospy.ServiceProxy("/topic_checker/start_check", Trigger)
+        self.configure_modalities_srv = rospy.ServiceProxy("/base/configure_modalities", Empty)
 
-        self.led_client = actionlib.SimpleActionClient(
-          '/leds_rectangle/blinky', BlinkyAction)
-        self.led_goal = None
         if self.led_client.wait_for_server(rospy.Duration(1)):
             self.led_goal = BlinkyGoal(ColorRGBA(0.8, 1.0, 0, 0.8), 10, 0.1, 0.1, 0, 0, 0, False, False)
             self.led_client.send_goal(self.led_goal)
         else:
             rospy.logerr("LED Server not found therefore it will not be used!")
+            self.led_goal = None    
             self.led_client = None
+
+        # check necessary topics for messages
+        rospy.wait_for_service("/topic_checker/start_check")
+        try:
+            resp = self.topic_check_srv()
+            if not resp.success:
+                raise rospy.ServiceException(resp.message)
+        except rospy.ServiceException as e:
+            rospy.logerr("Topic check failed: {}".format(e))
+
+        # Initialize robotrainer_deviation service
+        rospy.wait_for_service("/robotrainer_deviation/configure")
+        try:
+            resp = self.deviation_configure()
+            if not resp.success:
+                raise rospy.ServiceException(resp.message)
+        except rospy.ServiceException as e:
+            rospy.logerr("Service call robotrainer_deviation failed (Maybe scenario is not yet loaded, try again after clicking next user or next_task): {}".format(e))
 
         # initialize dynamic_reconfigure server
         self.first_reconfigure_callback = True
@@ -97,9 +118,10 @@ class UserStudyManager:
         rospy.Timer(rospy.Duration(1/self.frequency), self.timer_callback)
 
         self.diagnostic.force_update()
-        
+
 
     def timer_callback(self, event): 
+        trigger_services = False
         self.diagnostic.update()
 
         if self.user_id == -1 or self.trial == -1:
@@ -112,31 +134,95 @@ class UserStudyManager:
             
         if self.trial_changed or self.task_changed or self.user_id_changed:
             self.write_study_manager_status_file()
+
+            rospy.loginfo("New study status: \n" + "study_name: {}\nuser_id: {}\ntask_id: {}\ntrial: {}" \
+                          .format(self.study_name, self.format_user_id.format(UserID=self.user_id), self.task_id, self.trial))
+            
+            trigger_services = True
             
         if self.trial_changed:
-            # TODO(Denis): make this parameterizable
-            rospy.logwarn("Waiting before triggering sync services")
-            rospy.sleep(rospy.Duration(2))
-            rospy.logwarn("Triggering sync services")
-            # resp = self.sync_srv()
-            # if not resp.success:
-            #     rospy.logerr("Sync service responded with error...")
-            # resp = self.deviation_reset()
-            # if not resp.success:
-            #     rospy.logerr("Deviation reset service responded with error...")
-            
             self.trial_changed = False
             
+        if self.task_changed or self.user_id_changed:
+            #TODO(Andreas) would be better if first, all scenario is cleared, then the robotrainer is brought back to its starting position, the operator triggers a checkbox and then the new scenario is loaded
+            self.clear_scenario_params()
+
+            if not self.task_id == "END":
+                self.load_scenario_params()
+
+            try:
+                # Push the new scenario to the modalities with service /base/configure_modalities
+                resp = self.configure_modalities_srv()
+            except rospy.ServiceException as e:
+                rospy.logerr("Configure modalities service failed: {}".format(e))
+
+            try:
+                resp = self.deviation_configure()
+                if not resp.success:
+                    raise rospy.ServiceException(resp.message)
+            except rospy.ServiceException as e:
+                rospy.logerr("deviation_configure service call failed: {}".format(e))
+
         if self.task_changed:
             self.task_changed = False
             
         if self.user_id_changed:
             self.user_id_changed = False
-    
+
+        if trigger_services:
+            try:
+                # Reset the deviation service
+                resp = self.deviation_reset()
+                if not resp.success:
+                    raise rospy.ServiceException(resp.message)
+            except rospy.ServiceException as e:
+                rospy.logerr("deviation_reset service call failed: {}".format(e))
+
+            try:
+                # recheck if all necessary topics are still there   
+                resp = self.topic_check_srv()
+                if not resp.success:
+                    raise rospy.ServiceException(resp.message)
+            except rospy.ServiceException as e:
+                rospy.logerr("topic_check service call failed: {}".format(e))
+
+            # try:
+            #     # Trigger the sync service (last)
+            #     # rospy.logwarn("Waiting before triggering sync services")
+            #     # rospy.sleep(rospy.Duration(2))
+            #     resp = self.sync_srv()
+            #     if not resp.success:
+            #         raise rospy.ServiceException(resp.message)
+            # except rospy.ServiceException as e:
+            #     rospy.logerr("sync service call failed: {}".format(e))
+
+
+    def clear_scenario_params(self):
+        # First, clear the active scenario parameters by deleting the namespace on the parameter server.
+        if rospy.has_param(self.scenario_ns):
+            try:
+                rospy.delete_param(self.scenario_ns)
+                rospy.loginfo("Cleared scenario parameters in namespace: {}".format(self.scenario_ns))
+            except Exception as e:
+                rospy.logerr("Failed to clear parameters in namespace {}: {}".format(self.scenario_ns, e))
+        else:
+            rospy.logwarn("Namespace {} did not exist; nothing to clear.".format(self.scenario_ns))
+
+    def load_scenario_params(self):
+        scenario_file = os.path.join(self.scenario_folder, self.task_id + ".yaml")
+        
+        if os.path.isfile(scenario_file):
+            with open(scenario_file, 'r') as f:
+                params = yaml.safe_load(f)
+            rospy.set_param(self.scenario_ns, params)
+            rospy.loginfo("Loaded scenario parameters from {} into namespace {}".format(scenario_file, self.scenario_ns))
+        else:
+            rospy.logerr("Scenario file not found: {}".format(scenario_file))
+
 
     def rosbag_feedback_callback(self, message):
         # TODO(denis): Check if there is right thing started
-        rospy.loginfo("Received start for the bag file {}.".format(message.data))
+        rospy.loginfo("\033[32mBag recording started: {}\033[0m".format(message.data))
 
 
     def diagnostics_callback(self, stat):
@@ -212,7 +298,14 @@ class UserStudyManager:
             if (self.user_id != next_user_id):
                 self.user_id = next_user_id
                 self.user_id_changed = True
+            
+            if (config.start_topic_check):
+                resp = self.topic_check_srv()
+                if not resp.success:
+                    rospy.logerr("Topic check failed: {}".format(resp.message))
+            
 
+        config.start_topic_check = False
         config.next_trial = False
         config.trial = str(self.trial)
         config.next_task = False

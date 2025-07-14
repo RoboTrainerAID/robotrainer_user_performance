@@ -1,9 +1,0 @@
-roslaunch gait_parameters_estimation realsense.launch
-
-/upper_body_camera_realsense/color/image_raw/theora
-/upper_body_camera_realsense/color/image_raw/compressed
-/upper_body_camera_realsense/color/camera_info
-
-/upper_body_camera_realsense/depth/camera_info
-/upper_body_camera_realsense/depth/metadata
-/upper_body_camera_realsense/depth/color/points
