@@ -22,6 +22,7 @@ class TopicChecker(object):
             "/base/virtual_forces/modalities_debug/resulting_velocity",
             "/base/virtual_forces/modalities_debug/resulting_force",
             "/base/virtual_forces/modalities_debug/status",
+            "/robotrainer_user_study_manager/study_status",
         ]
         # Remove topics that are checked by publisher only from the activity check list
         self.topics = [t for t in self.topics if t not in self.topics_only_checked_by_subscribers]
