@@ -36,17 +36,17 @@ else
 fi
 
 # Start the Polar OH1 container in the background
-cd "$HOME/workspace/docker/robotrainer_docker_humble/" && ./detached.sh
+cd "$HOME/workspace/docker/robotrainer_docker_polar_oh1/" && ./detached.sh
 
 # Start the ROS2 bridge container in the background
 cd "$HOME/workspace/docker/robotrainer_docker_ros1_bridge" && ./detached.sh
 
 sleep 2  # Give containers time to start
 
-trap "echo; echo 'Stopping containers...'; docker stop robotrainer_humble; docker stop robotrainer_bridge; exit" SIGINT
+trap "echo; echo 'Stopping containers...'; docker stop robotrainer_polar_oh1; docker stop robotrainer_bridge; exit" SIGINT
 
 echo "Both containers started. Press Ctrl+C to stop."
 
-while docker ps | grep -q robotrainer_humble || docker ps | grep -q robotrainer_bridge; do
+while docker ps | grep -q robotrainer_polar_oh1 || docker ps | grep -q robotrainer_bridge; do
     sleep 1
 done

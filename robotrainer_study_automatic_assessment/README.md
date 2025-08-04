@@ -96,4 +96,4 @@ scp robotrainer_iras:/home/robotrainer/workspace/ros_ws_melodic_robotrainer/src/
 - [x] y-balance device zusammenbauen
 - [x] Klebebänder auf boden entfernen
 - [x] Sicherheitseinweisung Akkus
-- [ ] Fragebogen überprüfen
+- [x] Fragebogen überprüfen
