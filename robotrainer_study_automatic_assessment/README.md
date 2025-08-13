@@ -84,6 +84,12 @@ scp robotrainer_iras:/home/robotrainer/workspace/ros_ws_melodic_robotrainer/src/
 rsync -av --ignore-existing ./KATE_AA workstation:/home/zaan0001/nas/robotrainer/
 ```
 
+## Visualize data
+```bash
+roslaunch robotrainer_study_automatic_assessment rviz_scenario_and_data.launch
+
+rosbag play /path/to/your.bag
+```
 
 ## Todos
 
