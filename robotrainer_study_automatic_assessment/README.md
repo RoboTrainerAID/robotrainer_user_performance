@@ -79,6 +79,9 @@ mv -v ~/workspace/ros_ws_melodic_robotrainer/src/robotrainer_user_performance/ro
 
 # copy data with scp and ssh with laptop 
 scp robotrainer_iras:/home/robotrainer/workspace/ros_ws_melodic_robotrainer/src/robotrainer_user_performance/robotrainer_study_automatic_assessment/data/2025-X.bag /home/andreas/code/robotrainer/bags/
+
+# copy data from external hard drive to NAS
+rsync -av --ignore-existing ./KATE_AA workstation:/home/zaan0001/nas/robotrainer/
 ```
 
 
