@@ -11,4 +11,10 @@
     <param name="topics_to_record_yaml" value="$(arg topics_to_record_yaml)" />
   </node>
 
+  <arg name="scenario_folder_path" default="/home/robotrainer/workspace/docker/robotrainer_docker_bayesian_optimization/data/scenarios"/>
+    <node name="scenario_publisher" pkg="robotrainer_study_bayesian_optimization" type="scenario_publisher.py" output="screen">
+        <param name="scenario_folder" value="$(arg scenario_folder_path)"/>
+        <param name="newton_per_meter" value="30"/>
+    </node>
+
 </launch>
