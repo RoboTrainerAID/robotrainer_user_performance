@@ -119,6 +119,8 @@ class UserStudyManager:
 
         self.diagnostic.force_update()
 
+        rospy.loginfo("User Study Manager started")
+
 
     def timer_callback(self, event): 
         trigger_services = False

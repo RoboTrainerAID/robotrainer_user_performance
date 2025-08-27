@@ -1,8 +1,8 @@
 frequency: 1  # Study status publishing frequency
 study_name: "KATE_BO"
-scenario_folder_path: ""
-bag_folder_path: ""
-initial_scenario: "green_line"
+scenario_folder_path: "/home/robotrainer/workspace/docker/robotrainer_docker_bayesian_optimization/data/scenarios"
+bag_folder_path: "/home/robotrainer/workspace/docker/robotrainer_docker_bayesian_optimization/data/bags"
+initial_scenario: "initial_scenario"
 user_id_prefix: "U"
 user_id_length: 3  # e.g. 001 (max: 999)
   
