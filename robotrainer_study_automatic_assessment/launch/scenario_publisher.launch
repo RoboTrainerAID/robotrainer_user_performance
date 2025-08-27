@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="scenario_folder_path" default="$(find robotrainer_data_service)/yamls"/>
+    <node name="scenario_publisher" pkg="robotrainer_study_automatic_assessment" type="scenario_publisher.py" output="screen">
+        <param name="scenario_folder" value="$(arg scenario_folder_path)"/>
+        <param name="newton_per_meter" value="30"/>
+    </node>
+
+</launch>

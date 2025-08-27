@@ -39,12 +39,12 @@ roslaunch za_experimental rqt_reconfigure.launch
 ```bash
 # 1. Move RoboTrainer at the beginning of the path out of any force areas
 
-roslaunch robotrainer_study_automatic_assessment user_study_nodes.launch
+roslaunch robotrainer_study_bayesian_optimization user_study_nodes.launch
 
 rt2_start_polar
 # ./scripts/start_polar_oh1.bash
 
-roslaunch robotrainer_study_automatic_assessment user_study_manager.launch
+roslaunch robotrainer_study_bayesian_optimization user_study_manager.launch
 # 1. In rqt_reconfigure in left list, click refresh
 # 2. Click on robotrainer_user_study_manager
 # 3. Click next_user (load new scenario and trigger topic check)
@@ -65,7 +65,7 @@ rostopic echo /biosensors/polar_oh1/hr
 
 rt2_start_bag
 # ./scripts/record_topics.bash
-# DATA FOLDER: ./robotrainer_user_performance/robotrainer_study_automatic_assessment/data/
+# DATA FOLDER: ./robotrainer_user_performance/robotrainer_study_bayesian_optimization/data/
 ```
 
 ## Transfer data to external hard drive
@@ -74,11 +74,11 @@ rt2_start_bag
 udisksctl mount -b /dev/sda1
 # -> student-admin -> PW
 cd /media/robotrainer/RoSylerNT_Eval/KATE_AA/
-mv -v ~/workspace/ros_ws_melodic_robotrainer/src/robotrainer_user_performance/robotrainer_study_automatic_assessment/data/*.bag .
+mv -v ~/workspace/ros_ws_melodic_robotrainer/src/robotrainer_user_performance/robotrainer_study_bayesian_optimization/data/*.bag .
 
 
 # copy data with scp and ssh with laptop 
-scp robotrainer_iras:/home/robotrainer/workspace/ros_ws_melodic_robotrainer/src/robotrainer_user_performance/robotrainer_study_automatic_assessment/data/2025-X.bag /home/andreas/code/robotrainer/bags/
+scp robotrainer_iras:/home/robotrainer/workspace/ros_ws_melodic_robotrainer/src/robotrainer_user_performance/robotrainer_study_bayesian_optimization/data/2025-X.bag /home/andreas/code/robotrainer/bags/
 
 # copy data from external hard drive to NAS
 rsync -av --ignore-existing ./KATE_AA workstation:/home/zaan0001/nas/robotrainer/
@@ -86,7 +86,7 @@ rsync -av --ignore-existing ./KATE_AA workstation:/home/zaan0001/nas/robotrainer
 
 ## Visualize data
 ```bash
-roslaunch robotrainer_study_automatic_assessment rviz_scenario_and_data.launch
+roslaunch robotrainer_study_bayesian_optimization rviz_scenario_and_data.launch
 
 rosbag play /path/to/your.bag
 ```
