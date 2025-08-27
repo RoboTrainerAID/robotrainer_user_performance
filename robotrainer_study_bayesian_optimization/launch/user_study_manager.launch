@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="user_study_manager_config_yaml" default="$(find robotrainer_study_bayesian_optimization)/config/user_study_manager.yaml"/>
+  <node name="robotrainer_user_study_manager" pkg="robotrainer_study_bayesian_optimization" type="user_study_manager.py" output="screen">
+    <rosparam command="load" file="$(arg user_study_manager_config_yaml)"/>
+  </node>
+
+  <arg name="topics_to_record_yaml" default="$(find robotrainer_study_bayesian_optimization)/config/topics_to_record.yaml" />
+  <node name="topic_checker" pkg="robotrainer_study_bayesian_optimization" type="topic_checker.py" output="screen">
+    <param name="topics_to_record_yaml" value="$(arg topics_to_record_yaml)" />
+  </node>
+
+</launch>
