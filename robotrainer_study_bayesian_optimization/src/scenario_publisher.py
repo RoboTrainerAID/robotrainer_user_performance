@@ -25,15 +25,15 @@ class ScenarioPublisher:
 
 
     def listen_study_status(self, data):
-        # data: "KATE_AA_U010_16_yellow_line_force_right_60-1"
+        # data: "KATE_AA_U010_16_yellow_line_force_right_60_1"
 
         parts = data.data.split('_')
         study_name = parts[0] + '_' + parts[1]  # "KATE_AA"
         user_id = int(parts[2][1:])  # "010" (remove leading 'U')
-        scenario_and_trial = '_'.join(parts[3:])  # "16_yellow_line_force_right_60-1"
-        scenario_name = scenario_and_trial.split('-')[0] if '-' in scenario_and_trial else scenario_and_trial
-        trial = scenario_and_trial.split('-')[1] if '-' in scenario_and_trial else '1'
-        rospy.loginfo("study_name=%s, user_id=%d, scenario=%s, trial=%s" % (study_name, user_id, scenario_name, trial))
+        trial = parts[-1]  # Last part is the trial
+        scenario_name = '_'.join(parts[3:-1])  # Everything between becomes the scenario name
+        
+        # rospy.loginfo("study_name=%s, user_id=%d, scenario=%s, trial=%s" % (study_name, user_id, scenario_name, trial))
 
         if self.last_scenario_name != scenario_name:
             self.load_scenario_params(scenario_name)

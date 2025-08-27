@@ -70,7 +70,7 @@ class UserStudyManager:
 
         self.format_user_id = '{UserID:0' + str(self.user_id_length) + 'd}'
         self.format_string = (self.study_name + self.output_string_separator + self.user_id_prefix + self.format_user_id +
-                              self.output_string_separator + '{TaskID}' + '-' + '{TrialNr}')
+                              self.output_string_separator + '{TaskID}' + self.output_string_separator + '{TrialNr}')
         self.task_record_format = self.format_string
         rospy.loginfo("The status string will have format: " + self.format_string)
         rospy.logwarn("Study status: " + self.format_string.format(
@@ -85,7 +85,7 @@ class UserStudyManager:
         self.led_client = actionlib.SimpleActionClient('/leds_rectangle/blinky', BlinkyAction)
         self.topic_check_srv = rospy.ServiceProxy("/topic_checker/start_check", Trigger)
         self.configure_modalities_srv = rospy.ServiceProxy("/base/configure_modalities", Empty)
-        self.update_bo = rospy.ServiceProxy("/robotrainer_deviation/reset", Trigger)
+        self.update_bo = rospy.ServiceProxy("/robotrainer_bayesian_optimization/update", Trigger)
 
         if self.led_client.wait_for_server(rospy.Duration(1)):
             self.led_goal = BlinkyGoal(ColorRGBA(0.8, 1.0, 0, 0.8), 10, 0.1, 0.1, 0, 0, 0, False, False)
@@ -96,7 +96,7 @@ class UserStudyManager:
             self.led_client = None
 
         # check necessary topics for messages
-        rospy.wait_for_service("/topic_checker/start_check")
+        rospy.wait_for_service("/topic_checker/start_check", timeout=3)
         try:
             resp = self.topic_check_srv()
             if not resp.success:
@@ -111,7 +111,7 @@ class UserStudyManager:
             self.load_scenario_params()
 
         # Initialize robotrainer_deviation service
-        rospy.wait_for_service("/robotrainer_deviation/configure")
+        rospy.wait_for_service("/robotrainer_deviation/configure", timeout=3)
         try:
             resp = self.deviation_configure()
             if not resp.success:
@@ -127,6 +127,8 @@ class UserStudyManager:
         rospy.Timer(rospy.Duration(1/self.frequency), self.timer_callback)
 
         self.diagnostic.force_update()
+
+        rospy.loginfo("User Study Manager started")
 
 
     def timer_callback(self, event): 
@@ -256,9 +258,12 @@ class UserStudyManager:
             next_user_id = self.user_id
 
             if (config.next_task):
-                resp = self.update_bo()
-                if not resp.success:
-                    rospy.logerr("Update BO failed: {}".format(resp.message))
+                try:
+                    resp = self.update_bo()
+                    if not resp.success:
+                        raise rospy.ServiceException(resp.message)
+                except rospy.ServiceException as e:
+                    rospy.logerr("Update BO service call failed: {}".format(e))
                 else:
                     next_task = resp.message                
                 if (self.trial == -1):
@@ -278,6 +283,8 @@ class UserStudyManager:
                     user_id = int(config.user_id)
                     if (user_id < (pow(10, self.user_id_length))):
                         next_user_id = user_id
+                        next_trial = 1
+                        next_task = self.initial_scenario
                     else:
                         rospy.logerr("UserID: {UserID} too large! \n \
                                     Maximal UserID is {MaxUserIDs}" \

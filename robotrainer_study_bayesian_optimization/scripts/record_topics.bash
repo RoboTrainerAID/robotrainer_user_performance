@@ -1,8 +1,8 @@
 #!/bin/bash
 
-CONFIG_YAML=$(rospack find robotrainer_study_bayesian_optimization)/config/topics_to_record.yaml
+TOPICS_YAML=$(rospack find robotrainer_study_bayesian_optimization)/config/topics_to_record.yaml
+CONFIG_YAML=$(rospack find robotrainer_study_bayesian_optimization)/config/user_study_manager.yaml
 STATUS_FILE=$(rospack find robotrainer_study_bayesian_optimization)/status/user_study_manager.status
-BAG_FOLDER=$(rospack find robotrainer_study_bayesian_optimization)/data
 
 if [ ! -f "$STATUS_FILE" ]; then
   echo "Status file not found: $STATUS_FILE"
@@ -16,12 +16,12 @@ TASK_ID="${STATUS[2]}"
 TRIAL="${STATUS[3]}"
 
 # Format bag name (same as user_study_manager.py)
-BAG_NAME="${STUDY_NAME}_U${USER_ID}_${TASK_ID}-${TRIAL}"
+BAG_NAME="${STUDY_NAME}_U${USER_ID}_${TASK_ID}_${TRIAL}"
 
 # Extract list of topics from the simplified YAML
 TOPICS=$(python3 -c "
 import yaml
-with open('$CONFIG_YAML') as f:
+with open('$TOPICS_YAML') as f:
     data = yaml.safe_load(f)
 topics = data.get('topics_to_record_and_check_for_messages', [])
 if isinstance(topics, list):
@@ -29,10 +29,16 @@ if isinstance(topics, list):
 ")
 
 if [ -z "$TOPICS" ]; then
-  echo "No valid topics found in $CONFIG_YAML"
+  echo "No valid topics found in $TOPICS_YAML"
   exit 1
 fi
 
-# echo "Bag file name: $BAG_NAME"
+BAG_FOLDER=$(python3 -c "
+import yaml
+with open('$CONFIG_YAML') as f:
+    data = yaml.safe_load(f)
+print(data.get('bag_folder_path', ''))
+")
+
 BAG_PATH="${BAG_FOLDER}/${BAG_NAME}"
 rosbag record -p -o "$BAG_PATH" $TOPICS
