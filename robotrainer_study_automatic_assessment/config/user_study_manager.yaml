@@ -1,9 +1,10 @@
 frequency: 1  # Study status publishing frequency
 study_name: "KATE_AA"
-task_ids: ["1_green_line",
-  "2_green_line_force_right_40",
-  "3_green_line_force_right_60",
-  "4_green_line_force_right_80",
+task_ids: [
+  "1_green_line_force_right_40",
+  "2_green_line_force_right_60",
+  "3_green_line_force_right_80",
+  "4_green_line",
   "5_green_line_force_left_40",
   "6_green_line_force_left_60",
   "7_green_line_force_left_80",
