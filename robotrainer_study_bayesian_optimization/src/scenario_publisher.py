@@ -14,6 +14,8 @@ class ScenarioPublisher:
         self.study_status = rospy.Subscriber("/robotrainer_user_study_manager/study_status", String, self.listen_study_status)
         self.scenario_folder = rospy.get_param('/scenario_publisher/scenario_folder', '/robotrainer_user_performance/scenarios')
         self.newton_per_meter = rospy.get_param('/scenario_publisher/newton_per_meter', 30.0)
+        self.publish_frequency = rospy.get_param('/scenario_publisher/publish_frequency', 1.0)  # Hz
+        self.last_published_time = rospy.Time.now()
         self.last_scenario_name = None
         self.scenario = {}
 
@@ -37,9 +39,17 @@ class ScenarioPublisher:
 
         if self.last_scenario_name != scenario_name:
             self.load_scenario_params(scenario_name)
+            
+            # force direct publish on scenario change
+            self.last_published_time = rospy.Time.now() - rospy.Duration(1.0 / self.publish_frequency)
 
         if not self.scenario:
             return
+        
+        current_time = rospy.Time.now()
+        if (current_time - self.last_published_time).to_sec() < 1.0 / self.publish_frequency:
+            return  # Skip publishing if not enough time has passed
+        self.last_published_time = current_time
         
         # Publish path marker
         self.publish_path(self.scenario.get('path', {}))
