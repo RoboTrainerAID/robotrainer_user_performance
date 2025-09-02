@@ -39,7 +39,7 @@ fi
 cd "$HOME/workspace/docker/robotrainer_docker_polar_oh1/" && ./detached.sh
 
 # Start the ROS2 bridge container in the background
-cd "$HOME/workspace/docker/robotrainer_docker_ros1_bridge" && ./detached.sh
+cd "$HOME/workspace/docker/robotrainer_docker_ros1_bridge" && ./detached_bridge_all.sh
 
 sleep 2  # Give containers time to start
 

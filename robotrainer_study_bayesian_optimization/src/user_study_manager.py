@@ -262,10 +262,11 @@ class UserStudyManager:
                     resp = self.update_bo()
                     if not resp.success:
                         raise rospy.ServiceException(resp.message)
+                    else:
+                        rospy.loginfo("Update BO service call successful with new scenario: {}".format(resp.message))
+                        next_task = resp.message                   
                 except rospy.ServiceException as e:
                     rospy.logerr("Update BO service call failed: {}".format(e))
-                else:
-                    next_task = resp.message                
                 if (self.trial == -1):
                     next_trial = 1
                 else:
@@ -281,14 +282,15 @@ class UserStudyManager:
             else:
                 try:
                     user_id = int(config.user_id)
-                    if (user_id < (pow(10, self.user_id_length))):
-                        next_user_id = user_id
-                        next_trial = 1
-                        next_task = self.initial_scenario
-                    else:
-                        rospy.logerr("UserID: {UserID} too large! \n \
-                                    Maximal UserID is {MaxUserIDs}" \
-                                    .format(UserID=config.user_id, MaxUserIDs=(pow(10, self.user_id_length) - 1)))
+                    if (self.user_id != user_id):
+                        if (user_id < (pow(10, self.user_id_length))):
+                            next_user_id = user_id
+                            next_trial = 1
+                            next_task = self.initial_scenario
+                        else:
+                            rospy.logerr("UserID: {UserID} too large! \n \
+                                        Maximal UserID is {MaxUserIDs}" \
+                                        .format(UserID=config.user_id, MaxUserIDs=(pow(10, self.user_id_length) - 1)))
                 except Exception as e:
                     rospy.logerr(e)
                     
