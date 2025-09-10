@@ -143,7 +143,7 @@ class ScenarioPublisher:
 
         # Compute force strength in Newtons: arrow length scaled by newton_per_meter
         force_strength = length * self.newton_per_meter
-        rospy.loginfo("Force [%s]: strength = %.2f N", force_name, force_strength)
+        # rospy.loginfo("Force [%s]: strength = %.2f N", force_name, force_strength)
 
         # Create arrow marker (visual representation of force)
         arrow_marker = Marker()
