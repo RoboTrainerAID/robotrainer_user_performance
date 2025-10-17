@@ -6,6 +6,7 @@ import roslib
 roslib.load_manifest('diagnostic_updater')
 import rospy
 import rospkg
+import fcntl  # Import the fcntl module for file locking
 
 import actionlib
 import diagnostic_updater
@@ -124,24 +125,34 @@ class UserStudyManager:
         self.dyn_cfg_srv = dynamic_reconfigure.server.Server(
           UserStudyManagerConfig, self.reconfigure_callback)
 
-        rospy.Timer(rospy.Duration(1/self.frequency), self.timer_callback)
+        # Timer for slower, potentially blocking logic
+        rospy.Timer(rospy.Duration(1/self.frequency), self.logic_timer_callback)
+        # New, high-frequency timer just for publishing the status string
+        rospy.Timer(rospy.Duration(1/(2 * self.frequency)), self.publish_status_callback)
 
         self.diagnostic.force_update()
 
         rospy.loginfo("User Study Manager started")
 
 
-    def timer_callback(self, event): 
+    def publish_status_callback(self, event):
+        """High-frequency, non-blocking callback to publish the current study status."""
+        if self.user_id == -1 or self.trial == -1:
+            # This check prevents publishing an invalid initial status
+            return
+        
+        self.status_publisher_string.publish(
+            self.format_string.format(
+            UserID=self.user_id, TaskID=self.task_id, TrialNr=self.trial))
+
+
+    def logic_timer_callback(self, event): 
         trigger_services = False
         self.diagnostic.update()
 
         if self.user_id == -1 or self.trial == -1:
             rospy.logerr_throttle(5, "User_id or Trial is not set therefore the study_status is not published!")
             return
-        
-        self.status_publisher_string.publish(
-            self.format_string.format(
-            UserID=self.user_id, TaskID=self.task_id, TrialNr=self.trial))
             
         if self.trial_changed or self.task_changed or self.user_id_changed:
             self.write_study_manager_status_file()
@@ -349,28 +360,46 @@ class UserStudyManager:
 
     
     def write_study_manager_status_file(self):
-        file = open(self.manager_status_file, 'w')
-        file.writelines([self.study_name + "\n",
-                         self.format_user_id.format(UserID=self.user_id) + "\n",
-                         self.task_id + "\n",
-                         str(self.trial) + "\n"])
-        file.close()
+        """Safely writes the current status to the file using an exclusive lock."""
+        try:
+            with open(self.manager_status_file, 'w') as f:
+                # Acquire an exclusive lock. This will block other processes (readers/writers).
+                fcntl.flock(f, fcntl.LOCK_EX)
+                
+                f.writelines([self.study_name + "\n",
+                              self.format_user_id.format(UserID=self.user_id) + "\n",
+                              self.task_id + "\n",
+                              str(self.trial) + "\n"])
+                
+                # The lock is automatically released when the 'with' block exits.
+        except IOError as e:
+            rospy.logerr("Failed to write to manager status file {}: {}".format(self.manager_status_file, e))
 
     def load_study_manager_status_file(self):
+        """Safely reads the status from the file using a shared lock."""
         try:
-            with open(self.manager_status_file, 'r') as file:
-                lines = file.readlines()
-                if len(lines) >= 4:
-                    self.study_name = lines[0].strip()
-                    self.user_id = int(lines[1].strip())
-                    self.task_id = lines[2].strip()
-                    self.trial = int(lines[3].strip())
-                    self.data_set_from_file =  True
-                    rospy.loginfo("Manager status file successfully read and variables updated.")
-                else:
-                    rospy.logwarn("Manager status file does not contain enough data. Using default parameters.")
-        except Exception as e:
-            rospy.logwarn("Failed to read manager status file: {}. Using default parameters.".format(e))
+            # Open the file in 'a+' mode to create it if it doesn't exist, then prepare for reading.
+            with open(self.manager_status_file, 'a+') as f:
+                # Acquire a shared lock. This allows other readers but blocks writers.
+                fcntl.flock(f, fcntl.LOCK_SH)
+                
+                # Go to the beginning of the file to read its contents
+                f.seek(0)
+                lines = f.readlines()
+
+                # The lock is automatically released when the 'with' block exits.
+
+            if len(lines) >= 4:
+                self.study_name = lines[0].strip()
+                self.user_id = int(lines[1].strip())
+                self.task_id = lines[2].strip()
+                self.trial = int(lines[3].strip())
+                self.data_set_from_file = True
+                rospy.loginfo("Manager status file successfully read and variables updated.")
+            else:
+                rospy.logwarn("Manager status file does not contain enough data. Using default parameters.")
+        except (IOError, ValueError) as e:
+            rospy.logwarn("Failed to read or parse manager status file: {}. Using default parameters.".format(e))
 
 
 def main(args):

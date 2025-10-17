@@ -9,7 +9,17 @@ if [ ! -f "$STATUS_FILE" ]; then
   exit 1
 fi
 
-readarray -t STATUS < "$STATUS_FILE"
+# Safely read the status file using a shared lock on the data file itself.
+# The `flock` command will wait until it can acquire the lock, then execute `readarray`.
+STATUS=() # Initialize as an empty array
+flock -s "$STATUS_FILE" -c "readarray -t STATUS < '$STATUS_FILE'"
+
+# Check if readarray was successful
+if [ ${#STATUS[@]} -lt 4 ]; then
+  echo "Error: Failed to read status file or file is incomplete."
+  exit 1
+fi
+
 STUDY_NAME="${STATUS[0]}"
 USER_ID="${STATUS[1]}"
 TASK_ID="${STATUS[2]}"
