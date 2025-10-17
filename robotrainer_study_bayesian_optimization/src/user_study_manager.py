@@ -158,18 +158,18 @@ class UserStudyManager:
             if not self.task_id == "END":
                 self.load_scenario_params()
 
-            try:
-                # Push the new scenario to the modalities with service /base/configure_modalities
-                resp = self.configure_modalities_srv()
-            except rospy.ServiceException as e:
-                rospy.logerr("Configure modalities service failed: {}".format(e))
+            # try:
+            #     # Push the new scenario to the modalities with service /base/configure_modalities
+            #     resp = self.configure_modalities_srv()
+            # except rospy.ServiceException as e:
+            #     rospy.logerr("Configure modalities service failed: {}".format(e))
 
-            try:
-                resp = self.deviation_configure()
-                if not resp.success:
-                    raise rospy.ServiceException(resp.message)
-            except rospy.ServiceException as e:
-                rospy.logerr("deviation_configure service call failed: {}".format(e))
+            # try:
+            #     resp = self.deviation_configure()
+            #     if not resp.success:
+            #         raise rospy.ServiceException(resp.message)
+            # except rospy.ServiceException as e:
+            #     rospy.logerr("deviation_configure service call failed: {}".format(e))
 
         if self.trial_changed:
             self.trial_changed = False
@@ -230,6 +230,19 @@ class UserStudyManager:
         else:
             rospy.logerr("Scenario file not found: {}".format(scenario_file))
 
+        try:
+            # Push the new scenario to the modalities with service /base/configure_modalities
+            resp = self.configure_modalities_srv()
+        except rospy.ServiceException as e:
+            rospy.logerr("Configure modalities service failed: {}".format(e))
+
+        try:
+            resp = self.deviation_configure()
+            if not resp.success:
+                raise rospy.ServiceException(resp.message)
+        except rospy.ServiceException as e:
+            rospy.logerr("deviation_configure service call failed: {}".format(e))
+
 
     def rosbag_feedback_callback(self, message):
         # TODO(denis): Check if there is right thing started
@@ -259,13 +272,17 @@ class UserStudyManager:
 
             if (config.next_task):
                 try:
-                    resp = self.update_bo()
+                    start_time = rospy.Time.now()
+                    resp = self.update_bo() 
+                    rospy.loginfo("Called Update BO service to get next scenario and got response: {}".format(resp))
                     if not resp.success:
                         raise rospy.ServiceException(resp.message)
                     else:
+                        rospy.loginfo("TIME duration: {}".format(rospy.Time.now() - start_time))
                         rospy.loginfo("Update BO service call successful with new scenario: {}".format(resp.message))
                         next_task = resp.message                   
                 except rospy.ServiceException as e:
+                    rospy.logerr("TIME duration: {}".format(rospy.Time.now() - start_time))
                     rospy.logerr("Update BO service call failed: {}".format(e))
                 if (self.trial == -1):
                     next_trial = 1
@@ -307,9 +324,12 @@ class UserStudyManager:
                 self.user_id_changed = True
             
             if (config.start_topic_check):
-                resp = self.topic_check_srv()
-                if not resp.success:
-                    rospy.logerr("Topic check failed: {}".format(resp.message))
+                try:
+                    resp = self.topic_check_srv()
+                    if not resp.success:
+                        raise rospy.ServiceException(resp.message)
+                except rospy.ServiceException as e:
+                    rospy.logerr("Topic check failed: {}".format(e))
 
            
             
