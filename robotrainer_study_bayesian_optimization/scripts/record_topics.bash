@@ -12,7 +12,8 @@ fi
 # Safely read the status file using a shared lock on the data file itself.
 # The `flock` command will wait until it can acquire the lock, then execute `readarray`.
 STATUS=() # Initialize as an empty array
-flock -s "$STATUS_FILE" -c "readarray -t STATUS < $STATUS_FILE"
+# The command inside flock runs in a subshell, so we pipe its output to the parent's `readarray`.
+readarray -t STATUS < <(flock -s "$STATUS_FILE" cat "$STATUS_FILE")
 
 # Check if readarray was successful
 if [ ${#STATUS[@]} -lt 4 ]; then

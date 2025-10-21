@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <launch>
+  <!-- Necessary to set longer ros service timeout (default 5s) -->
   <param name="/ros1_bridge/dynamic_bridge/service_execution_timeout" type="int" value="60"/>
 
   <arg name="user_study_manager_config_yaml" default="$(find robotrainer_study_bayesian_optimization)/config/user_study_manager.yaml"/>

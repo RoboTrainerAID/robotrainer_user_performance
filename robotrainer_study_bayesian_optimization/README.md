@@ -17,7 +17,7 @@ roslaunch za_experimental rt2.launch
 
 rt2_init
 
-# Nur wenn notwendig nach sicherheitsstopp
+# Nur notwendig nach Sicherheitsstopp
 rt2_recover
 
 roslaunch robotrainer_panel robotrainer.launch
