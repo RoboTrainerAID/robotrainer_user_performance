@@ -2,7 +2,7 @@
 <launch>
 
     <!-- /tf from topic /mobile_robot_pose -->
-    <node pkg="gait_parameters_estimation" name="publish_transform_from_topic" type="publish_transform_from_topic.py" output="screen" />
+    <!-- <node pkg="gait_parameters_estimation" name="publish_transform_from_topic" type="publish_transform_from_topic.py" output="screen" /> -->
 
     <!-- publish topic /robot_description -->
     <include file="$(find za_experimental)/launch/urdf_standalone.launch" />

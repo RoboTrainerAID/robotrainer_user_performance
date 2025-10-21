@@ -27,7 +27,7 @@ topics_to_record_and_check_for_messages:
   - /upper_body_camera_realsense/depth/color/points
   - /map
   - /map_metadata
-  - /mobile_robot_pose
+  # - /mobile_robot_pose
   - /robotrainer_deviation/current_path_index
   - /robotrainer_deviation/robotrainer_deviation
   - /robotrainer_deviation/robotrainer_deviation_markers
