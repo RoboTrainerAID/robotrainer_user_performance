@@ -21,8 +21,6 @@ fi
 # Reset terminal settings in case bluetoothctl has modified them
 stty sane
 
-"$(rospack find robotrainer_study_automatic_assessment)/scripts/disable_hci0.expect"
-
 # Check if the desired USB Bluetooth controller is UP RUNNING
 DESIRED_STATUS=$(hciconfig -a | awk -v mac="$USB_BLUETOOTH_MAC" 'BEGIN {IGNORECASE=1} 
     $0 ~ mac {found=1} 
