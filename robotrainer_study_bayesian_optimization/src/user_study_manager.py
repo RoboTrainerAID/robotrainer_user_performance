@@ -30,7 +30,7 @@ class UserStudyManager:
         self.diagnostic.setHardwareID("User_Study_Manager")
         self.diagnostic.broadcast(0, "Initializing User Study Manager")
 
-        self.frequency = rospy.get_param("~frequency", 1)
+        self.frequency = rospy.get_param("~frequency", 1.0)
         self.study_name = rospy.get_param("~study_name", "")
         self.user_id_prefix = rospy.get_param("~user_id_prefix", "")
         self.user_id_length = rospy.get_param("~user_id_length", 3)
@@ -41,6 +41,7 @@ class UserStudyManager:
         self.scenario_folder = rospy.get_param("~scenario_folder_path")
         self.bag_folder = rospy.get_param("~bag_folder_path")
         self.initial_scenario = rospy.get_param("~initial_scenario")
+        self.use_gait_processing_in_the_loop = rospy.get_param("~use_gait_processing_in_the_loop", True)
 
         self.manager_status_file = rospy.get_param("~manager_status_file", None)
         self.data_set_from_file = False
@@ -87,6 +88,8 @@ class UserStudyManager:
         self.topic_check_srv = rospy.ServiceProxy("/topic_checker/start_check", Trigger)
         self.configure_modalities_srv = rospy.ServiceProxy("/base/configure_modalities", Empty)
         self.update_bo = rospy.ServiceProxy("/robotrainer_bayesian_optimization/update", Trigger)
+        self.toe_process = rospy.ServiceProxy("/toe_detection_kalman_from_bag_node/process", Trigger)
+        self.gait_process = rospy.ServiceProxy("/gait_estimation_from_bag_node/process", Trigger)
 
         if self.led_client.wait_for_server(rospy.Duration(1)):
             self.led_goal = BlinkyGoal(ColorRGBA(0.8, 1.0, 0, 0.8), 10, 0.1, 0.1, 0, 0, 0, False, False)
@@ -106,19 +109,14 @@ class UserStudyManager:
             rospy.logerr("Topic check failed: {}".format(e))
 
         # Load initial scenario
-        if self.initial_scenario:
-            self.task_id = self.initial_scenario
-            self.clear_scenario_params()
-            self.load_scenario_params()
+        # if self.initial_scenario:
+        #     self.task_id = self.initial_scenario
+        self.clear_scenario_params()
+        self.load_scenario_params()
 
-        # Initialize robotrainer_deviation service
-        rospy.wait_for_service("/robotrainer_deviation/configure", timeout=3)
-        try:
-            resp = self.deviation_configure()
-            if not resp.success:
-                raise rospy.ServiceException(resp.message)
-        except rospy.ServiceException as e:
-            rospy.logerr("Service call robotrainer_deviation failed (Maybe scenario is not yet loaded, try again after clicking next user or next_task): {}".format(e))
+        if self.use_gait_processing_in_the_loop:
+            rospy.wait_for_service("/gait_estimation_from_bag_node/process", timeout=3)
+            rospy.wait_for_service("/toe_detection_kalman_from_bag_node/process", timeout=3)
 
         # initialize dynamic_reconfigure server
         self.first_reconfigure_callback = True
@@ -127,9 +125,9 @@ class UserStudyManager:
 
         # Timer for slower, potentially blocking logic
         rospy.Timer(rospy.Duration(1/self.frequency), self.logic_timer_callback)
-        # New, high-frequency timer just for publishing the status string
+        # high-frequency timer just for publishing the status string
         rospy.Timer(rospy.Duration(1/(2 * self.frequency)), self.publish_status_callback)
-
+        
         self.diagnostic.force_update()
 
         rospy.loginfo("User Study Manager started")
@@ -168,19 +166,6 @@ class UserStudyManager:
 
             if not self.task_id == "END":
                 self.load_scenario_params()
-
-            # try:
-            #     # Push the new scenario to the modalities with service /base/configure_modalities
-            #     resp = self.configure_modalities_srv()
-            # except rospy.ServiceException as e:
-            #     rospy.logerr("Configure modalities service failed: {}".format(e))
-
-            # try:
-            #     resp = self.deviation_configure()
-            #     if not resp.success:
-            #         raise rospy.ServiceException(resp.message)
-            # except rospy.ServiceException as e:
-            #     rospy.logerr("deviation_configure service call failed: {}".format(e))
 
         if self.trial_changed:
             self.trial_changed = False
@@ -252,7 +237,7 @@ class UserStudyManager:
             if not resp.success:
                 raise rospy.ServiceException(resp.message)
         except rospy.ServiceException as e:
-            rospy.logerr("deviation_configure service call failed: {}".format(e))
+            rospy.logerr("deviation_configure service call failed (Maybe scenario is not yet loaded, try again after clicking next user or next_task): {}".format(e))
 
 
     def rosbag_feedback_callback(self, message):
@@ -282,25 +267,38 @@ class UserStudyManager:
             next_user_id = self.user_id
 
             if (config.next_task):
+                start_time = rospy.Time.now().to_sec()
                 try:
-                    start_time = rospy.Time.now()
+                    if self.use_gait_processing_in_the_loop:
+                        # Process toe detection from raw bag file
+                        resp = self.toe_process()
+                        if not resp.success:
+                            raise rospy.ServiceException("/toe_detection_kalman_from_bag_node/process returned FAILURE: {}".format(resp.message))
+                        rospy.loginfo("Toe detection successfull, took: {:.2f}s".format(rospy.Time.now().to_sec() - start_time))
+
+                        # Process gait estimation from toe bag file
+                        resp = self.gait_process()
+                        if not resp.success:
+                            raise rospy.ServiceException("/gait_estimation_from_bag_node/process returned FAILURE: {}".format(resp.message))
+                        rospy.loginfo("Gait estimation successfull, took: {:.2f}s".format(rospy.Time.now().to_sec() - start_time))
+                
+                    # Call the BO service to get the next scenario
                     resp = self.update_bo() 
-                    rospy.loginfo("Called Update BO service to get next scenario and got response: {}".format(resp))
                     if not resp.success:
-                        raise rospy.ServiceException(resp.message)
-                    else:
-                        rospy.loginfo("TIME duration: {}".format(rospy.Time.now() - start_time))
-                        rospy.loginfo("Update BO service call successful with new scenario: {}".format(resp.message))
-                        next_task = resp.message                   
+                        raise rospy.ServiceException("/robotrainer_bayesian_optimization/update returned FAILURE: {}".format(resp.message))
+                    rospy.loginfo("BO update successfull, took: {:.2f}s".format(rospy.Time.now().to_sec() - start_time))
+                    rospy.loginfo("New scenario: {}".format(resp.message))
+                    next_task = resp.message
+
                 except rospy.ServiceException as e:
-                    rospy.logerr("TIME duration: {}".format(rospy.Time.now() - start_time))
-                    rospy.logerr("Update BO service call failed: {}".format(e))
+                    rospy.logerr("Service call failed: {}".format(e))
+
                 if (self.trial == -1):
                     next_trial = 1
                 else:
                     next_trial += 1
 
-            if config.next_user:
+            elif config.next_user:
                 if (self.user_id == -1):
                     next_user_id = 1
                 else:
@@ -308,20 +306,42 @@ class UserStudyManager:
                 next_trial = 1
                 next_task = self.initial_scenario
             else:
+                # Handle manual changes from the GUI
                 try:
                     user_id = int(config.user_id)
                     if (self.user_id != user_id):
                         if (user_id < (pow(10, self.user_id_length))):
                             next_user_id = user_id
-                            next_trial = 1
-                            next_task = self.initial_scenario
+                            # Reset trial and task when user is changed manually
+                            # next_trial = 1
+                            # next_task = self.initial_scenario
                         else:
-                            rospy.logerr("UserID: {UserID} too large! \n \
-                                        Maximal UserID is {MaxUserIDs}" \
+                            rospy.logerr("UserID: {UserID} too large! Maximal UserID is {MaxUserIDs}"
                                         .format(UserID=config.user_id, MaxUserIDs=(pow(10, self.user_id_length) - 1)))
+                except ValueError:
+                    rospy.logerr("Invalid UserID format: {}".format(config.user_id))
                 except Exception as e:
                     rospy.logerr(e)
-                    
+
+                # Handle manual trial change
+                try:
+                    trial = int(config.trial)
+                    if self.trial != trial and trial >= 0:
+                        next_trial = trial
+                except ValueError:
+                    rospy.logerr("Invalid Trial format: {}".format(config.trial))
+                except Exception as e:
+                    rospy.logerr(e)
+
+                # Handle manual task_id change
+                if self.task_id != config.task_id:
+                    # check if the scenario file exists
+                    scenario_file = os.path.join(self.scenario_folder, config.task_id + ".yaml")
+                    if os.path.isfile(scenario_file):
+                        next_task = config.task_id
+                    else:
+                        rospy.logerr("TaskID '{TaskID}' is invalid, scenario file not found.".format(TaskID=config.task_id))
+
             if (self.trial != next_trial):
                 self.trial = next_trial
                 self.trial_changed = True
@@ -341,9 +361,6 @@ class UserStudyManager:
                         raise rospy.ServiceException(resp.message)
                 except rospy.ServiceException as e:
                     rospy.logerr("Topic check failed: {}".format(e))
-
-           
-            
 
         config.next_task = False
         config.next_user = False
