@@ -1,6 +1,0 @@
-#!/usr/bin/env expect
-log_user 0
-spawn su - student-admin -c "echo 'robotrainer_sudo' | sudo -S hciconfig hci0 down && echo 'robotrainer_sudo' | sudo -S hciconfig hci1 up"
-expect "Password:"
-send "robotrainer_sudo\r"
-expect eof

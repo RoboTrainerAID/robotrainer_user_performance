@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <launch>
     <!-- LOWER LEGS CAMERA -->
-    <!-- <include file="$(find gait_parameters_estimation)/launch/camera.launch">
+    <include file="$(find gait_parameters_estimation)/launch/camera.launch">
         <arg name="camera_name" value="lower_legs_camera"/>
-    </include> -->
+    </include>
     <!-- <include file="$(find gait_parameters_estimation)/launch/toe_detection.launch" /> -->
 
     <!-- LEG DETECTION -->
@@ -11,9 +11,9 @@
     <!-- <include file="$(find gait_parameters_estimation)/launch/leg_tracker_one_person.launch" /> -->
 
     <!-- UPPER BODY CAMERA -->
-    <!-- <include file="$(find gait_parameters_estimation)/launch/realsense.launch">
+    <include file="$(find gait_parameters_estimation)/launch/realsense.launch">
         <arg name="camera_name" value="upper_body_camera_realsense"/>
-    </include> -->
+    </include>
     <!-- <include file="$(human_body_detection)/launch/human_body_detection_asus.launch" /> -->
     <!-- <node pkg="gait_parameters_estimation" name="gait_com_estimation" type="gait_parameters_estimation_com_tracker_node" output="screen">
         <rosparam command="load" file="$(find gait_parameters_estimation)/config/KalmanFilterParameters.yaml"/>
