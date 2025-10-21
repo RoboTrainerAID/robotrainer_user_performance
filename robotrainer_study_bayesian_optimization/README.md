@@ -65,8 +65,8 @@ rt2_start_bag
 # 1. Plug external hard drive into usb3.0 port
 udisksctl mount -b /dev/sda1
 # -> student-admin -> PW
-cd /media/robotrainer/RoSylerNT_Eval/KATE_AA/
-mv -v ~/workspace/ros_ws_melodic_robotrainer/src/robotrainer_user_performance/robotrainer_study_bayesian_optimization/data/*.bag .
+cd /media/robotrainer/RoSylerNT_Eval/KATE_BO/
+mv -v ~/workspace/docker/robotrainer_docker_bayesian_optimization/data/* .
 
 
 # copy data with scp and ssh with laptop 
