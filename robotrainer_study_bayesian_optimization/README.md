@@ -1,4 +1,4 @@
-# User study automatic assessment
+# User study Bayesian Optimization
 
 ## Instructions:
 - Time is measured by starting the bag record when walking on the path
