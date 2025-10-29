@@ -73,7 +73,7 @@ mv -v ~/workspace/docker/robotrainer_docker_bayesian_optimization/data/* .
 scp robotrainer_iras:/home/robotrainer/workspace/ros_ws_melodic_robotrainer/src/robotrainer_user_performance/robotrainer_study_bayesian_optimization/data/2025-X.bag /home/andreas/code/robotrainer/bags/
 
 # copy data from external hard drive to NAS
-rsync -av --ignore-existing ./KATE_AA workstation:/home/zaan0001/nas/robotrainer/
+rsync -av --ignore-existing ./KATE_BO workstation:/iras/users/zaan0001/robotrainer/
 ```
 
 ## Visualize data
