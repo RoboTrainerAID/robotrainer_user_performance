@@ -68,12 +68,25 @@ udisksctl mount -b /dev/sda1
 cd /media/robotrainer/RoSylerNT_Eval/KATE_BO/
 mv -v ~/workspace/docker/robotrainer_docker_bayesian_optimization/data/* .
 
-
-# copy data with scp and ssh with laptop 
-scp robotrainer_iras:/home/robotrainer/workspace/ros_ws_melodic_robotrainer/src/robotrainer_user_performance/robotrainer_study_bayesian_optimization/data/2025-X.bag /home/andreas/code/robotrainer/bags/
-
 # copy data from external hard drive to NAS
 rsync -av --ignore-existing ./KATE_BO workstation:/iras/users/zaan0001/robotrainer/
+```
+
+## Create gait data after recording bag files
+```bash
+# Plug in external hard drive into tux laptop
+# make folder writable from other user
+sudo chmod a+w -R /media/andreas/RoSylerNT_Eval/KATE_BO/bags/
+
+# start melodic docker container and mount external hard drive
+./code/docker/robotrainer_docker_melodic/start_docker.sh
+    -v /media/andreas/RoSylerNT_Eval/KATE_BO:/home/docker/ros_ws/robotrainer/KATE_BO \
+
+# Run script to iterate folder in container
+# Change folder path for input and output
+INPUT_FOLDER="/home/docker/ros_ws/robotrainer/KATE_BO/bags/U005_BO_wrench_force_y_max_qUCB/raw"
+roscore &
+./src/gait_parameters_estimation/gait_parameters_estimation/iterate_folder_and_estimate_gait.bash
 ```
 
 ## Visualize data
