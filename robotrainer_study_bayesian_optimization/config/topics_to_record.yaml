@@ -9,25 +9,25 @@ topics_to_record_and_check_for_messages:
   - /base/virtual_forces/modalities_debug/resulting_velocity
   - /base/virtual_forces/modalities_debug/resulting_force
   - /base/virtual_forces/modalities_debug/status
-  - /base_laser_back/scan
-  - /biosensors/polar_oh1/hr
-  - /biosensors/polar_oh1/ppg_ch0
-  - /biosensors/polar_oh1/ppg_ch1
-  - /biosensors/polar_oh1/ppg_ch2
-  - /biosensors/polar_oh1/ppg_ch3
-  - /biosensors/polar_oh1/ppi
-  - /biosensors/polar_oh1/hrv
-  - /lower_legs_camera/depth_registered/points
-  - /lower_legs_camera/depth_registered/image_raw
-  - /lower_legs_camera/depth_registered/camera_info
-  - /upper_body_camera_realsense/color/camera_info
-  - /upper_body_camera_realsense/color/image_raw
-  - /upper_body_camera_realsense/depth/camera_info
-  - /upper_body_camera_realsense/depth/metadata
-  - /upper_body_camera_realsense/depth/color/points
+  # - /base_laser_back/scan
+  # - /biosensors/polar_oh1/hr
+  # - /biosensors/polar_oh1/ppg_ch0
+  # - /biosensors/polar_oh1/ppg_ch1
+  # - /biosensors/polar_oh1/ppg_ch2
+  # - /biosensors/polar_oh1/ppg_ch3
+  # - /biosensors/polar_oh1/ppi
+  # - /biosensors/polar_oh1/hrv
+  # - /lower_legs_camera/depth_registered/points
+  # - /lower_legs_camera/depth_registered/image_raw
+  # - /lower_legs_camera/depth_registered/camera_info
+  # - /upper_body_camera_realsense/color/camera_info
+  # - /upper_body_camera_realsense/color/image_raw
+  # - /upper_body_camera_realsense/depth/camera_info
+  # - /upper_body_camera_realsense/depth/metadata
+  # - /upper_body_camera_realsense/depth/color/points
   - /map
   - /map_metadata
-  # - /mobile_robot_pose
+  - /mobile_robot_pose
   - /robotrainer_deviation/current_path_index
   - /robotrainer_deviation/robotrainer_deviation
   - /robotrainer_deviation/robotrainer_deviation_markers
