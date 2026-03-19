@@ -2,7 +2,7 @@ frequency: 1.0  # Study status publishing frequency
 study_name: "KATE_BO"
 scenario_folder_path: "/home/robotrainer/workspace/docker/robotrainer_docker_bayesian_optimization/data/scenarios"
 bag_folder_path: "/home/robotrainer/workspace/docker/robotrainer_docker_bayesian_optimization/data/bags/raw"
-initial_scenario: "initial_scenario"
+initial_scenario: "experiment_0003_running_direction_1_force_0_force_direction_1_user_correction_parallel_speed_fast_robotrainer_mode_default_maximum_force_default"
 use_gait_processing_in_the_loop: False
   
 # run_command_on_task_change: ["echo_name"]

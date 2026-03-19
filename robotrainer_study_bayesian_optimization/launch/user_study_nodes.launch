@@ -23,6 +23,7 @@
     </node> -->
 
     <!-- GAIT ESTIMATION -->
+    <include file="$(find gait_parameters_estimation)/launch/extract_mobile_robot_base.launch" />
     <include file="$(find gait_parameters_estimation)/launch/gait_estimation_from_bag_node.launch">
         <arg name="input_bag_folder" value="/home/robotrainer/workspace/docker/robotrainer_docker_bayesian_optimization/data/bags/toe" />
         <arg name="output_bag_folder" value="/home/robotrainer/workspace/docker/robotrainer_docker_bayesian_optimization/data/bags/gait" />

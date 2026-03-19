@@ -32,6 +32,9 @@ rt2_start_polar
 # ./scripts/start_polar_oh1.bash
 # rostopic echo /biosensors/polar_oh1/hr
 
+# Only bridge
+# cd "$HOME/workspace/docker/robotrainer_docker_ros1_bridge" && ./detached_bridge_all.sh
+
 roslaunch robotrainer_study_bayesian_optimization user_study_manager.launch
 
 roslaunch za_experimental rqt_reconfigure.launch
