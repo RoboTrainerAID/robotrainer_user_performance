@@ -1,0 +1,3 @@
+float64 average
+float64 standard_deviation
+float64 total

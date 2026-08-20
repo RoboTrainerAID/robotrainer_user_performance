@@ -1,0 +1,20 @@
+frequency: 1.0  # Study status publishing frequency
+study_name: "KATE_DIFFICULTY"
+scenario_folder_path: "/home/robotrainer/workspace/docker/robotrainer_docker_bayesian_optimization/data/scenarios"
+bag_folder_path: "/home/robotrainer/workspace/docker/robotrainer_docker_bayesian_optimization/data/bags/raw"
+initial_scenario: "experiment_0003_running_direction_1_force_0_force_direction_1_user_correction_parallel_speed_fast_robotrainer_mode_default_maximum_force_default"
+use_gait_processing_in_the_loop: False
+  
+# run_command_on_task_change: ["echo_name"]
+
+user_id_prefix: "U"
+user_id_length: 3  # e.g. 001 (max: 999)
+output_string_separator: "_"
+# String has format:
+# study_name + output_string_separator +
+# user_id_prefix + user_id + output_string_separator +
+# task_id + "-" + trial
+
+use_led_output: True
+
+manager_status_file: "/status/user_study_manager.status" # Path relative to the package directory

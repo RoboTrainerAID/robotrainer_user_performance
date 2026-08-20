@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Necessary to set longer ros service timeout (default 5s) -->
+  <param name="/ros1_bridge/dynamic_bridge/service_execution_timeout" type="int" value="60"/>
+
+  <arg name="user_study_manager_config_yaml" default="$(find robotrainer_study_difficulty)/config/user_study_manager.yaml"/>
+  <node name="robotrainer_user_study_manager" pkg="robotrainer_study_difficulty" type="user_study_manager.py" output="screen">
+    <rosparam command="load" file="$(arg user_study_manager_config_yaml)"/>
+  </node>
+
+  <arg name="topics_to_record_yaml" default="$(find robotrainer_study_difficulty)/config/topics_to_record.yaml" />
+  <node name="topic_checker" pkg="robotrainer_study_difficulty" type="topic_checker.py" output="screen">
+    <param name="topics_to_record_yaml" value="$(arg topics_to_record_yaml)" />
+  </node>
+
+  <arg name="scenario_folder_path" default="/home/robotrainer/workspace/docker/robotrainer_docker_bayesian_optimization/data/scenarios"/>
+    <node name="scenario_publisher" pkg="robotrainer_study_difficulty" type="scenario_publisher.py" output="screen">
+        <param name="scenario_folder" value="$(arg scenario_folder_path)"/>
+        <param name="newton_per_meter" value="30"/>
+    </node>
+
+</launch>

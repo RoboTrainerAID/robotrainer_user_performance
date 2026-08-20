@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- CAMERA TOE DETECTION-->
+    <include file="$(find gait_parameters_estimation)/launch/camera.launch">
+        <arg name="camera_name" value="lower_legs_camera"/>
+    </include>
+    <include file="$(find camera_lower_leg_tracking)/launch/toe_detection_kalman_from_bag_node.launch">
+        <arg name="input_bag_folder" value="/home/robotrainer/workspace/docker/robotrainer_docker_bayesian_optimization/data/bags/raw" />
+        <arg name="output_bag_folder" value="/home/robotrainer/workspace/docker/robotrainer_docker_bayesian_optimization/data/bags/toe" />
+    </include>
+
+    <!-- LASERSCANNER LEG DETECTION -->
+    <!-- Laserscanners will autostart from robotrainer_bringup/robot/sr3_on_startup.launch -->
+    <!-- <include file="$(find gait_parameters_estimation)/launch/leg_tracker_one_person.launch" /> -->
+
+    <!-- UPPER BODY CAMERA -->
+    <!-- <include file="$(find gait_parameters_estimation)/launch/realsense.launch">
+        <arg name="camera_name" value="upper_body_camera_realsense"/>
+    </include> -->
+    <!-- <include file="$(human_body_detection)/launch/human_body_detection_asus.launch" /> -->
+    <!-- <node pkg="gait_parameters_estimation" name="gait_com_estimation" type="gait_parameters_estimation_com_tracker_node" output="screen">
+        <rosparam command="load" file="$(find gait_parameters_estimation)/config/KalmanFilterParameters.yaml"/>
+    </node> -->
+
+    <!-- GAIT ESTIMATION -->
+    <include file="$(find gait_parameters_estimation)/launch/extract_mobile_robot_base.launch" />
+    <include file="$(find gait_parameters_estimation)/launch/gait_estimation_from_bag_node.launch">
+        <arg name="input_bag_folder" value="/home/robotrainer/workspace/docker/robotrainer_docker_bayesian_optimization/data/bags/toe" />
+        <arg name="output_bag_folder" value="/home/robotrainer/workspace/docker/robotrainer_docker_bayesian_optimization/data/bags/gait" />
+    </include>
+
+    <!-- DEVIATION -->
+    <include file="$(find robotrainer_deviation)/launch/robotrainer_deviation.launch" />
+      
+
+</launch>
