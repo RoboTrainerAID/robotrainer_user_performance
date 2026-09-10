@@ -28,12 +28,10 @@ roslaunch robotrainer_study_difficulty user_study_nodes.launch
 rt2_start_bo
 # Wait for BO to successfully start
 
-rt2_start_polar
-# ./scripts/start_polar_oh1.bash
-# rostopic echo /biosensors/polar_oh1/hr
+rt2_start_bridge
 
-# Only bridge
-# cd "$HOME/workspace/docker/robotrainer_docker_ros1_bridge" && ./detached_bridge_all.sh
+rt2_start_polar
+# rostopic echo /biosensors/polar_oh1/hr
 
 roslaunch robotrainer_study_difficulty user_study_manager.launch
 
