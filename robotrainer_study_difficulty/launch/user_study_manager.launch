@@ -2,6 +2,7 @@
 <launch>
   <!-- Necessary to set longer ros service timeout (default 5s) -->
   <param name="/ros1_bridge/dynamic_bridge/service_execution_timeout" type="int" value="60"/>
+  <param name="/ros1_bridge/parameter_bridge/service_execution_timeout" type="int" value="60"/>
 
   <arg name="user_study_manager_config_yaml" default="$(find robotrainer_study_difficulty)/config/user_study_manager.yaml"/>
   <node name="robotrainer_user_study_manager" pkg="robotrainer_study_difficulty" type="user_study_manager.py" output="screen">
