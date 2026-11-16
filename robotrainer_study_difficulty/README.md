@@ -43,18 +43,43 @@ roslaunch za_experimental rqt_reconfigure.launch
     # 4. tick apply_control_actions 
 # (Nur EINMAL nach controller starten notwendig)
 
-# First task Experiment:
+# TABLET WEBSITE ON LAPTOP
+./code/robotrainer/petra_central_control/start_docker_dev.sh
+./code/robotrainer/petra_web/start_docker_dev.sh
+
+    # BACKEND_URL ändern wenn sich der website host ändert
+    # Yuliia: 192.168.1.5:5001 Andreas: 192.168.1.2:5000
+    # 1. in robotrainer_docker_bayesian_optimization/start_docker
+        -e BACKEND_URL="http://192.168.1.2:5000" \
+    # 2. auf dem HOST in petra_web/.env
+    REACT_APP_FLASK_BACKEND_URL=http://192.168.1.2:5000
+    # 3. auf dem HOST in petra_central_control/.env
+    FLASK_BACKEND_URL=http://192.168.1.2:5000
+    PETRA_...=http://192.168.1.2:3000
+
+# RoboTrainer Tasks:
 # 1. In rqt_reconfigure in left list, click refresh
 # 2. Click on robotrainer_user_study_manager
 # 3. Click next_user (load new scenario and trigger topic check)
-# 4. Start rosbag record
+# 4. This gives the correct user ID for the tablet website
+
+# Clinical Scales for each User
+# 1. Open tablet website/Fragebogen/Neuen Fragebogen starten
+# 2. Enter correct user ID for next experiment e.g. 3
+# 3. This is necessary before BO can do next_task because here the user will be created in the DB
+# 4. Enter measurements from clinical scales
+
+# First Task:
+# 1. Tablet has to be in "Training in Progress..."
+# 2. Start rosbag record
+# 3. Answer questions at Tablet
 
 # For each following Task:
 # 1. Drive RoboTrainer back to its starting position
 # 2. In rqt_reconfigure click next_task (triggers /update service)
 # 3. Wait for all messages beeing green in user_study_manager
 # 4. Start rosbag record
-
+# 5. Answer questions at Tablet
 
 rt2_start_bag
 # ./scripts/record_topics.bash
